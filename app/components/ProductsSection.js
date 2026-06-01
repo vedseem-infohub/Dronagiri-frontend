@@ -114,6 +114,7 @@ export default function ProductsSection() {
             </div>
           </Reveal>
             {showViewMore && (
+              <Reveal>
               <div className="text-center mt-10">
                 <Link
                   href={viewMoreHref}
@@ -122,6 +123,7 @@ export default function ProductsSection() {
                   View More
                 </Link>
               </div>
+              </Reveal>
             )}
           </>
         ) : (

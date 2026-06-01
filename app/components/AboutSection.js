@@ -1,4 +1,5 @@
 import { ArrowRight, BadgeCheck, Handshake, Heart, Sprout } from "lucide-react";
+import Reveal from "./Reveal";
 
 export default function AboutSection() {
   const values = [
@@ -36,6 +37,7 @@ export default function AboutSection() {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text Content */}
+          <Reveal delay={0.1}>
           <div>
             <span className="inline-block text-xs font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 border border-amber-400/30 px-4 py-1.5 rounded-full mb-6">
               About Us
@@ -66,8 +68,10 @@ export default function AboutSection() {
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </a>
           </div>
+          </Reveal>
 
           {/* Right: Values Grid */}
+          <Reveal delay={0.3}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {values.map(({ Icon, title, desc }) => (
               <div
@@ -80,6 +84,7 @@ export default function AboutSection() {
               </div>
             ))}
           </div>
+          </Reveal>
         </div>
       </div>
     </section>

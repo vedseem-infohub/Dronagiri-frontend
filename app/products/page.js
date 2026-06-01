@@ -9,6 +9,7 @@ import {
   categoryToSlug,
 } from "../data/products";
 import MarqueeStrip from "../components/MarqueeStrip";
+import Reveal from "../components/Reveal";
 
 export const metadata = {
   title: "All Products | Dronagiri Farm",
@@ -28,7 +29,8 @@ export default function ProductsPage() {
         <div className="max-w-7xl mx-auto">
 
           <div className="flex flex-wrap gap-2 justify-center mb-10">
-            {productCategories.map((category) => (
+            {productCategories.map((category, i) => (
+              <Reveal key={category} delay={i * 0.1}>
               <Link
                 key={category}
                 href={`/products/${categoryToSlug(category)}`}
@@ -36,15 +38,18 @@ export default function ProductsPage() {
               >
                 {category}
               </Link>
+              </Reveal>
             ))}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
+            {products.map((product, i) => (
+              <Reveal key={product.id} delay={i * 0.1}>
               <ProductCard
                 key={product.id}
                 product={product}
               />
+              </Reveal>
             ))}
           </div>
         </div>

@@ -1,3 +1,5 @@
+import Reveal from "./Reveal";
+
 export default function WhyUsSection() {
   const features = [
     { icon: "🌿", title: "No Chemicals", desc: "Zero pesticides or synthetic fertilizers used at any stage of farming." },
@@ -12,19 +14,26 @@ export default function WhyUsSection() {
     <section className="py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-14">
+          <Reveal>
           <span className="inline-block text-xs font-bold tracking-widest text-green-600 uppercase bg-green-100 px-4 py-1.5 rounded-full mb-4">
             Why Choose Us
           </span>
+          </Reveal>
+          <Reveal>
           <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
             The Dronagiri Difference
           </h2>
+          </Reveal>
+          <Reveal>
           <p className="text-gray-500 text-lg max-w-xl mx-auto">
             We don&apos;t just sell food — we deliver trust, tradition, and transparency.
           </p>
+          </Reveal>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map(({ icon, title, desc }, i) => (
+            <Reveal key={title} delay={i * 0.1}>
             <div
               key={title}
               className="group p-6 rounded-2xl border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-300 hover:-translate-y-1"
@@ -35,6 +44,7 @@ export default function WhyUsSection() {
               <h3 className="font-bold text-gray-900 text-lg mb-2">{title}</h3>
               <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
             </div>
+            </Reveal>
           ))}
         </div>
       </div>
