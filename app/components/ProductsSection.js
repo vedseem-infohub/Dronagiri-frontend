@@ -75,9 +75,9 @@ export default function ProductsSection() {
           )}
         </div>
         </Reveal>
-        <Reveal>
         <div className="flex flex-wrap gap-2 justify-center mb-10">
-          {categories.map((cat) => (
+          {categories.map((cat, i) => (
+          <Reveal key={cat} delay={i * 0.1}>
             <button
               key={cat}
               id={`filter-${cat.toLowerCase().replace(/\s+/g, "-")}`}
@@ -90,9 +90,9 @@ export default function ProductsSection() {
             >
               {cat}
             </button>
+        </Reveal>
           ))}
         </div>
-        </Reveal>
 
         {search && (
           <p className="text-center text-sm text-gray-500 mb-6">
