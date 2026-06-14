@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Star, Minus, Plus } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
 import { categoryColors } from "../data/products";
 import ProductIcon from "./ProductIcon";
 import { useCart } from "@/context/CartContext";
+// import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { userDataContext } from "@/context/UserContext";
 
 export default function ProductCard({ product }) {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const { isLoggedIn, loding } = useContext(userDataContext);
+  const router = useRouter();
   const controls = useAnimation();
 
   const handleAddToCartAnimation = async () => {
@@ -129,6 +134,19 @@ export default function ProductCard({ product }) {
           <motion.button
             // animate={controls}
             onClick={async () => {
+              if (loding) return;
+
+              if (!isLoggedIn) {
+                toast.error("Please sign in first", {
+                  description: "You need to be logged in to add items to your cart.",
+                  action: {
+                    label: "Sign In",
+                    onClick: () => router.push("/login?redirect=/products"),
+                  },
+                });
+                router.push("/login?redirect=/products");
+                return;
+              }
               addToCart(product, variant.size, quantity);
               toast.success("Added to Cart!", {
                 description: `${quantity} x ${product.name} (${variant.size}) successfully added.`,

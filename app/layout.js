@@ -2,7 +2,9 @@ import { Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
+import UserContext from "@/context/UserContext";
 import { Toaster } from "@/components/ui/sonner";
+
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -38,12 +40,14 @@ export default function RootLayout({ children }) {
       className={`${playfair.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-[family-name:var(--font-poppins)] bg-[#fdfbf7]">
-        <CartProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster position="bottom-right" closeButton richColors />
-          </TooltipProvider>
-        </CartProvider>
+        <UserContext>
+          <CartProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster position="bottom-right" closeButton richColors />
+            </TooltipProvider>
+          </CartProvider>
+            </UserContext>
       </body>
     </html>
   );

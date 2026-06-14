@@ -1,16 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PackageCheck, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PackageCheck, ShoppingCart, LogIn, LogOut, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+// import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { userDataContext } from "@/context/UserContext";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { getCartCount } = useCart();
+  const { isLoggedIn, userData: user, logout } = useContext(userDataContext);
+  const router = useRouter();
   const cartCount = getCartCount();
+
   const navItems = [
     { label: "Products", href: "/products" },
     { label: "About", href: "/about" },
@@ -23,6 +30,19 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setMenuOpen(false);
+      toast.success("Signed out successfully.");
+      router.push("/");
+    } catch (error) {
+      toast.error("Logout failed", {
+        description: error?.response?.data?.message || "Please try again.",
+      });
+    }
+  };
 
   return (
     <nav
@@ -79,7 +99,7 @@ export default function Navbar() {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-500 transition-all duration-300 group-hover:w-full rounded-full" />
               </Link>
             ))}
-            
+
             {/* Desktop Cart Button */}
             <Link
               href="/cart"
@@ -96,15 +116,46 @@ export default function Navbar() {
               )}
             </Link>
 
+            {/* Auth Buttons */}
+            {isLoggedIn ? (
+              <div className="flex items-center gap-3">
+                {/* User indicator */}
+                <div
+                  className={`flex items-center gap-1.5 text-sm font-medium ${
+                    scrolled ? "text-gray-600" : "text-white/80"
+                  }`}
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden lg:inline">{user?.name || "Account"}</span>
+                </div>
+                {/* Logout */}
+                <button
+                  id="navbar-logout-btn"
+                  onClick={handleLogout}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-300 hover:-translate-y-0.5 ${
+                    scrolled
+                      ? "border-red-200 text-red-500 hover:bg-red-50"
+                      : "border-white/30 text-white/90 hover:bg-white/10"
+                  }`}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                id="navbar-login-btn"
+                href="/login"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-green-300 transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Link>
+            )}
+
             <Link
               href="/products"
-              className="bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-green-300 transition-all duration-300 hover:-translate-y-0.5"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/products"
-              className="bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-green-300 transition-all duration-300 hover:-translate-y-0.5"
+              className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-amber-300 transition-all duration-300 hover:-translate-y-0.5"
             >
               Shop Now
             </Link>
@@ -112,7 +163,7 @@ export default function Navbar() {
 
           {/* Mobile Right Controls (Cart & Hamburger) */}
           <div className="flex items-center gap-3 md:hidden">
-            {/* Mobile Cart Button */}
+            {/* Mobile Orders Button */}
             <Link
               href="/orders"
               className={`p-2 rounded-xl relative transition-colors ${
@@ -171,7 +222,7 @@ export default function Navbar() {
         {/* Mobile Menu Dropdown */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-300 ${
-            menuOpen ? "max-h-80 mt-4" : "max-h-0"
+            menuOpen ? "max-h-96 mt-4" : "max-h-0"
           }`}
         >
           <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl flex flex-col gap-2">
@@ -185,7 +236,7 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
-            
+
             {/* Mobile Menu Cart Link */}
             <Link
               href="/cart"
@@ -203,10 +254,38 @@ export default function Navbar() {
               )}
             </Link>
 
+            {/* Auth section in mobile menu */}
+            {isLoggedIn ? (
+              <>
+                <div className="px-4 py-2 text-xs font-semibold text-gray-400 border-t border-gray-100 mt-1 pt-3 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {user?.name || "My Account"}
+                </div>
+                <button
+                  id="mobile-logout-btn"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-red-500 font-semibold px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors text-left"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <Link
+                id="mobile-login-btn"
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-lime-600 text-white px-4 py-2.5 rounded-xl font-semibold text-center mt-1"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Link>
+            )}
+
             <Link
               href="/products"
               onClick={() => setMenuOpen(false)}
-              className="bg-gradient-to-r from-green-600 to-lime-600 text-white px-4 py-2.5 rounded-xl font-semibold text-center mt-1"
+              className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-4 py-2.5 rounded-xl font-semibold text-center mt-1"
             >
               Shop Now
             </Link>
