@@ -4,7 +4,6 @@ import Footer from "../components/Footer";
 import ProductHero from "../components/ProductHero";
 import ProductCard from "../components/ProductCard";
 import {
-  products,
   productCategories,
   categoryToSlug,
 } from "../data/products";
@@ -16,7 +15,17 @@ export const metadata = {
   description: "Browse all farm-fresh products from Dronagiri Farm.",
 };
 
-export default function ProductsPage() {
+export default async function ProductsPage() {
+  let productsList = [];
+  try {
+    const res = await fetch("http://localhost:8000/api/products", { cache: "no-store" });
+    if (res.ok) {
+      productsList = await res.json();
+    }
+  } catch (err) {
+    console.error("Error fetching products:", err);
+  }
+
   return (
     <>
       <Navbar />
@@ -34,7 +43,7 @@ export default function ProductsPage() {
               <Link
                 key={category}
                 href={`/products/${categoryToSlug(category)}`}
-                className="border-2 border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600 bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                className="border-2 border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
               >
                 {category}
               </Link>
@@ -43,7 +52,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product, i) => (
+            {productsList.map((product, i) => (
               <Reveal key={product.id} delay={i * 0.1}>
               <ProductCard
                 key={product.id}

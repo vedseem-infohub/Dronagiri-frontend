@@ -7,22 +7,22 @@ export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="py-20 px-4 bg-gradient-to-br from-amber-50 via-lime-50 to-green-50"
+      className="py-20 px-4 bg-[#F7F1E8]"
     >
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <Reveal>
-          <span className="inline-block text-xs font-bold tracking-widest text-amber-600 uppercase bg-amber-100 px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-[#8C6A43] text-xs font-bold tracking-[0.3em] uppercase mb-4 border-b-2 border-[#8C6A43]/40 pb-2">
              Enquiries
           </span>
           </Reveal>
           <Reveal>
-          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Get in Touch
+          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-[#223614] mb-4">
+            Get in <span className="italic text-[#8C6A43]">Touch</span>
           </h2>
           </Reveal>
           <Reveal>
-          <p className="text-gray-500 text-lg">
+          <p className="text-[#8C6A43] text-lg font-light">
             Have a question? We&apos;re just a message away.
           </p>
           </Reveal>
@@ -38,14 +38,14 @@ export default function ContactSection() {
               href="https://wa.me/919999999999"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-green-200 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
+              className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#8C6A43]/10 hover:border-[#8C6A43]/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-[#223614]/10 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
                 💬
               </div>
               <div>
-                <p className="font-bold text-gray-900">WhatsApp Orders</p>
-                <p className="text-green-600 font-medium text-sm">
+                <p className="font-bold text-[#223614]">WhatsApp Orders</p>
+                <p className="text-[#8C6A43] font-medium text-sm">
                   +91 99999 99999
                 </p>
                 <p className="text-gray-400 text-xs mt-0.5">
@@ -58,14 +58,14 @@ export default function ContactSection() {
             <a
               id="contact-phone"
               href="tel:+919999999999"
-              className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:border-green-200 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
+              className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#8C6A43]/10 hover:border-[#8C6A43]/40 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 group"
             >
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-[#8C6A43]/15 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform">
                 📞
               </div>
               <div>
-                <p className="font-bold text-gray-900">Call Us</p>
-                <p className="text-blue-600 font-medium text-sm">
+                <p className="font-bold text-[#223614]">Call Us</p>
+                <p className="text-[#8C6A43] font-medium text-sm">
                   +91 99999 99999
                 </p>
                 <p className="text-gray-400 text-xs mt-0.5">
@@ -75,13 +75,13 @@ export default function ContactSection() {
             </a>
 
             {/* Location */}
-            <div className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-2xl shrink-0">
+            <div className="flex items-center gap-4 bg-white rounded-2xl p-5 shadow-sm border border-[#8C6A43]/10">
+              <div className="w-12 h-12 rounded-xl bg-[#8C6A43]/15 flex items-center justify-center text-2xl shrink-0">
                 📍
               </div>
               <div>
-                <p className="font-bold text-gray-900">Our Farm</p>
-                <p className="text-amber-600 font-medium text-sm">
+                <p className="font-bold text-[#223614]">Our Farm</p>
+                <p className="text-[#8C6A43] font-medium text-sm">
                   Dronagiri, Maharashtra
                 </p>
                 <p className="text-gray-400 text-xs mt-0.5">
@@ -91,7 +91,7 @@ export default function ContactSection() {
             </div>
 
             {/* Bulk Orders Note */}
-            <div className="flex items-start gap-4 bg-gradient-to-r from-green-600 to-lime-600 rounded-2xl p-5 text-white">
+            <div className="flex items-start gap-4 bg-gradient-to-r from-[#223614] to-emerald-800 rounded-2xl p-5 text-white">
               <div className="text-2xl shrink-0">🎁</div>
               <div>
                 <p className="font-bold text-base">Bulk Orders Welcome!</p>
@@ -106,8 +106,8 @@ export default function ContactSection() {
 
           {/* Quick Order Form */}
           <Reveal>
-          <div className="bg-white rounded-3xl p-6 shadow-md border border-gray-100">
-            <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-gray-900 mb-5">
+          <div className="bg-white rounded-3xl p-6 shadow-md border border-[#8C6A43]/10">
+            <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#223614] mb-5">
               Quick Order Enquiry
             </h3>
             <form
@@ -128,7 +128,7 @@ export default function ContactSection() {
               <div>
                 <label
                   htmlFor="enquiry-name"
-                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                  className="block text-sm font-medium text-[#223614] mb-1.5"
                 >
                   Your Name
                 </label>
@@ -138,13 +138,13 @@ export default function ContactSection() {
                   type="text"
                   required
                   placeholder="Enter your name"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none text-sm transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#8C6A43] focus:outline-none text-sm transition-colors"
                 />
               </div>
               <div>
                 <label
                   htmlFor="enquiry-phone"
-                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                  className="block text-sm font-medium text-[#223614] mb-1.5"
                 >
                   Phone Number
                 </label>
@@ -154,13 +154,13 @@ export default function ContactSection() {
                   type="tel"
                   required
                   placeholder="+91 XXXXX XXXXX"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none text-sm transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#8C6A43] focus:outline-none text-sm transition-colors"
                 />
               </div>
               <div>
                 <label
                   htmlFor="enquiry-message"
-                  className="block text-sm font-medium text-gray-700 mb-1.5"
+                  className="block text-sm font-medium text-[#223614] mb-1.5"
                 >
                   What would you like to order?
                 </label>
@@ -170,13 +170,13 @@ export default function ContactSection() {
                   required
                   rows={4}
                   placeholder="e.g., 1kg Desi Ghee, 5kg Khapli Wheat..."
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-400 focus:outline-none text-sm transition-colors resize-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#8C6A43] focus:outline-none text-sm transition-colors resize-none"
                 />
               </div>
               <button
                 id="enquiry-submit"
                 type="submit"
-                className="w-full bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-green-300 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] text-white font-bold py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 shadow-md hover:shadow-amber-900/30 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Send via WhatsApp</span>
                 <span>💬</span>

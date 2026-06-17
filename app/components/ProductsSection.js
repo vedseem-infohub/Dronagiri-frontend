@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, Wheat, X } from "lucide-react";
 import ProductCard from "./ProductCard";
-import { products, categories, categoryToSlug } from "../data/products";
+import { categories, categoryToSlug } from "../data/products";
+import { useCart } from "@/context/CartContext";
 import Reveal from "./Reveal";
 
 export default function ProductsSection() {
+  const { products } = useCart();
   const [activeCategory, setActiveCategory] = useState("All");
   const [search, setSearch] = useState("");
 
@@ -33,27 +35,27 @@ export default function ProductsSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <Reveal>
-          <span className="inline-block text-xs font-bold tracking-widest text-green-600 uppercase bg-green-100 px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-[#8C6A43] text-xs font-bold tracking-[0.3em] uppercase mb-4 border-b-2 border-[#8C6A43]/40 pb-2">
             Our Products
           </span>
           </Reveal>
           <Reveal>
-          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Farm-Fresh Goodness
+          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-[#223614] mb-4">
+            Farm-Fresh <span className="italic text-[#8C6A43]">Goodness</span>
           </h2>
           </Reveal>
           <Reveal>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Every product is grown and sourced directly from our farm â€” no
+          <p className="text-[#8C6A43] text-lg max-w-xl mx-auto font-light">
+            Every product is grown and sourced directly from our farm — no
             middlemen, no compromises.
           </p>
           </Reveal>
         </div>
         
          <Reveal>
-        <div className="flex items-center max-w-md mx-auto mb-8 bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+        <div className="flex items-center max-w-md mx-auto mb-8 bg-white rounded-2xl shadow-md border border-[#8C6A43]/20 focus-within:border-[#8C6A43] overflow-hidden transition-all duration-300">
           <Search
-            className="ml-4 h-5 w-5 shrink-0 text-gray-400"
+            className="ml-4 h-5 w-5 shrink-0 text-[#8C6A43]/60"
             aria-hidden="true"
           />
           <input
@@ -62,12 +64,12 @@ export default function ProductsSection() {
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-4 py-3 text-gray-700 text-sm outline-none bg-transparent placeholder-gray-400 min-w-0"
+            className="flex-1 px-4 py-3 text-[#223614] text-sm outline-none bg-transparent placeholder-[#8C6A43]/40 min-w-0"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="pr-4 text-gray-400 hover:text-gray-600 transition-colors"
+              className="pr-4 text-[#8C6A43]/60 hover:text-[#8C6A43] transition-colors"
               aria-label="Clear search"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -84,8 +86,8 @@ export default function ProductsSection() {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all duration-200 ${
                 activeCategory === cat
-                  ? "bg-green-600 border-green-600 text-white shadow-md"
-                  : "border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600 bg-white"
+                  ? "bg-[#223614] border-[#223614] text-[#F7F1E8] shadow-md"
+                  : "border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white"
               }`}
             >
               {cat}
@@ -118,7 +120,7 @@ export default function ProductsSection() {
               <div className="text-center mt-10">
                 <Link
                   href={viewMoreHref}
-                  className="inline-flex items-center justify-center bg-gradient-to-r from-green-600 to-lime-600 hover:from-green-700 hover:to-lime-700 text-white px-7 py-3 rounded-full text-sm font-semibold shadow-md hover:shadow-green-200 transition-all duration-300 hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] text-white px-8 py-3.5 rounded-full text-sm font-semibold shadow-md hover:shadow-amber-900/30 transition-all duration-300 hover:-translate-y-0.5"
                 >
                   View More
                 </Link>

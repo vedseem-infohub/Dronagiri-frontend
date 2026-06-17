@@ -19,8 +19,8 @@ export default function ProductHero({
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center">
         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 mb-6 animate-fade-in-up">
-          <span className="w-2 h-2 rounded-full bg-green-400 badge-organic" />
-          <span className="text-white/90 text-sm font-medium tracking-widest uppercase">
+          <span className="w-2 h-2 rounded-full bg-amber-400 badge-organic" />
+          <span className="text-[#F7F1E8] text-sm font-medium tracking-widest uppercase">
             {eyebrow}
           </span>
         </div>
@@ -28,7 +28,7 @@ export default function ProductHero({
           {title}
         </h1>
         <p
-          className="text-white/80 text-lg sm:text-xl md:text-2xl font-light max-w-2xl animate-fade-in-up"
+          className="text-[#D9CBB5] text-lg sm:text-xl md:text-2xl font-light max-w-2xl animate-fade-in-up"
           style={{ animationDelay: "0.2s" }}
         >
           {description}

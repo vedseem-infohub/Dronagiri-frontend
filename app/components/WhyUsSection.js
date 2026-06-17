@@ -11,21 +11,21 @@ export default function WhyUsSection() {
   ];
 
   return (
-    <section className="py-20 px-4 bg-white">
+    <section className="py-20 px-4 bg-[#fdfbf7]">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-14">
           <Reveal>
-          <span className="inline-block text-xs font-bold tracking-widest text-green-600 uppercase bg-green-100 px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-[#8C6A43] text-xs font-bold tracking-[0.3em] uppercase mb-4 border-b-2 border-[#8C6A43]/40 pb-2">
             Why Choose Us
           </span>
           </Reveal>
           <Reveal>
-          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            The Dronagiri Difference
+          <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-[#223614] mb-4">
+            The Dronagiri <span className="italic text-[#8C6A43]">Difference</span>
           </h2>
           </Reveal>
           <Reveal>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="text-[#8C6A43] text-lg max-w-xl mx-auto font-light">
             We don&apos;t just sell food — we deliver trust, tradition, and transparency.
           </p>
           </Reveal>
@@ -36,13 +36,13 @@ export default function WhyUsSection() {
             <Reveal key={title} delay={i * 0.1}>
             <div
               key={title}
-              className="group p-6 rounded-2xl border-2 border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-300 hover:-translate-y-1"
+              className="group p-6 rounded-2xl border-2 border-[#8C6A43]/10 hover:border-[#8C6A43]/40 hover:bg-[#F7F1E8]/50 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-100 to-lime-100 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#223614]/10 to-[#8C6A43]/15 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300">
                 {icon}
               </div>
-              <h3 className="font-bold text-gray-900 text-lg mb-2">{title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              <h3 className="font-bold text-[#223614] text-lg mb-2">{title}</h3>
+              <p className="text-gray-700 text-sm leading-relaxed">{desc}</p>
             </div>
             </Reveal>
           ))}

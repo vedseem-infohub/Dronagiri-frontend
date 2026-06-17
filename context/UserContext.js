@@ -5,10 +5,10 @@ import React, { createContext, useEffect, useState } from 'react'
 
 export const userDataContext = createContext()
 
-const UserContext = ({children}) => {
+const UserContext = ({children, initialUser}) => {
     const serverUrl = "http://localhost:8000"
-    const [userData, setuserData] = useState(null)
-    const [loding, setloding] = useState(true)
+    const [userData, setuserData] = useState(initialUser || null)
+    const [loding, setloding] = useState(initialUser === undefined)
 
     const handleCurrentUser = async () => {
         setloding(true)
@@ -42,6 +42,9 @@ const UserContext = ({children}) => {
     }
 
     useEffect(() => {
+        if (initialUser !== undefined) {
+            return
+        }
         let isMounted = true
 
         axios.get(`${serverUrl}/api/user/current`, {withCredentials: true})
@@ -61,7 +64,7 @@ const UserContext = ({children}) => {
         return () => {
             isMounted = false
         }
-    }, [])
+    }, [initialUser])
 
     const value = {
     serverUrl,

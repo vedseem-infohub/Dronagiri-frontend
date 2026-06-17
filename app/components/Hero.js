@@ -155,8 +155,8 @@ export default function Hero() {
       >
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 mb-6 animate-fade-in-up">
-          <span className="w-2 h-2 rounded-full bg-green-400 badge-organic" />
-          <span className="text-white/95 text-xs sm:text-sm font-semibold tracking-widest uppercase">
+          <span className="w-2 h-2 rounded-full bg-amber-400 badge-organic" />
+          <span className="text-[#F7F1E8] text-xs sm:text-sm font-semibold tracking-widest uppercase">
             {slides[currentSlide].badge}
           </span>
         </div>
@@ -174,7 +174,7 @@ export default function Hero() {
 
         {/* Tagline */}
         <p
-          className="text-white/85 text-base sm:text-lg md:text-xl font-light max-w-2xl mb-10 animate-fade-in-up select-none"
+          className="text-[#D9CBB5] text-base sm:text-lg md:text-xl font-light max-w-2xl mb-10 animate-fade-in-up select-none"
           style={{ animationDelay: "0.3s" }}
         >
           {slides[currentSlide].tagline}
@@ -188,7 +188,7 @@ export default function Hero() {
           <Link
             id={`hero-shop-btn-${currentSlide}`}
             href={slides[currentSlide].primaryCta.href}
-            className="bg-gradient-to-r from-green-500 to-lime-500 hover:from-green-600 hover:to-lime-600 text-white font-bold px-8 py-4 rounded-full text-base sm:text-lg shadow-xl hover:shadow-green-500/40 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 text-center"
+            className="bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] text-white font-bold px-8 py-4 rounded-full text-base sm:text-lg shadow-xl hover:shadow-amber-900/40 transition-all duration-300 hover:-translate-y-1 active:translate-y-0 text-center"
           >
             {slides[currentSlide].primaryCta.text}
           </Link>
@@ -208,10 +208,10 @@ export default function Hero() {
         >
           {slides[currentSlide].stats.map(({ value, label }) => (
             <div key={label} className="text-center select-none">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-[family-name:var(--font-playfair)]">
+              <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-400 font-[family-name:var(--font-playfair)]">
                 {value}
               </div>
-              <div className="text-white/60 text-xs sm:text-sm uppercase tracking-wider mt-1 font-medium">
+              <div className="text-[#D9CBB5] text-xs sm:text-sm uppercase tracking-wider mt-1 font-medium">
                 {label}
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function Hero() {
             key={index}
             onClick={() => goToSlide(index)}
             className={`h-2 rounded-full transition-all duration-500 cursor-pointer shadow-sm ${index === currentSlide
-              ? "w-8 bg-green-400"
+              ? "w-8 bg-[#8C6A43]"
               : "w-2 bg-white/30 hover:bg-white/60"
               }`}
             aria-label={`Go to slide ${index + 1}`}

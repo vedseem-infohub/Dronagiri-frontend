@@ -49,6 +49,16 @@ const categoryIconMap = {
 };
 
 export default function ProductIcon({ product, className = "" }) {
+  if (product.imageUrl) {
+    return (
+      <img
+        src={product.imageUrl}
+        alt={product.name}
+        className="object-cover rounded-2xl w-24 h-24 shadow-sm"
+      />
+    );
+  }
+
   const Icon =
     productIconMap[product.name] || categoryIconMap[product.category] || Leaf;
 

@@ -22,7 +22,8 @@ import axios from "axios";
 function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const targetRedirect = searchParams.get("redirect") || "/";
+  const redirectTo = `/address?redirect=${encodeURIComponent(targetRedirect)}`;
   const { serverUrl, setuserData } = useContext(userDataContext);
 
   const [name, setName] = useState("");

@@ -1,113 +1,314 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { products as staticProducts } from "@/app/data/products";
+import { userDataContext } from "@/context/UserContext";
 
 const CartContext = createContext();
 
-export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+function normalizeCartItems(items = [], allProducts = []) {
+  return items.map((item) => {
+    const localProduct = allProducts.find(
+      (product) => product.id === item.productId
+    );
 
-  // Load cart and order history from localStorage on mount
-  useEffect(() => {
-    const loadStoredData = () => {
-      const savedCart = localStorage.getItem("dronagiri_cart");
-      if (savedCart) {
-        try {
-          setCart(JSON.parse(savedCart));
-        } catch (e) {
-          console.error("Error parsing cart data", e);
-        }
-      }
-
-      const savedOrders = localStorage.getItem("dronagiri_orders");
-      if (savedOrders) {
-        try {
-          setOrders(JSON.parse(savedOrders));
-        } catch (e) {
-          console.error("Error parsing order data", e);
-        }
-      }
-
-      setIsLoaded(true);
+    return {
+      product: localProduct || {
+        id: item.productId,
+        name: item.name,
+        category: "",
+        variants: [{ quantity: item.quantity, price: item.price }],
+        imageUrl: item.imageUrl || "",
+      },
+      quantity: item.quantity,
+      price: item.price,
+      count: item.count,
     };
+  });
+}
 
-    const timeoutId = window.setTimeout(loadStoredData, 0);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("dronagiri_cart", JSON.stringify(cart));
-    }
-  }, [cart, isLoaded]);
-
-  // Save order history whenever it changes
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem("dronagiri_orders", JSON.stringify(orders));
-    }
-  }, [orders, isLoaded]);
-
-  const addToCart = (product, variantSize, quantity = 1) => {
-    const variant = product.variants.find((v) => v.size === variantSize) || product.variants[0];
-    setCart((prevCart) => {
-      const existingItemIndex = prevCart.findIndex(
-        (item) => item.product.id === product.id && item.size === variantSize
+function normalizeOrders(ordersList = [], allProducts = []) {
+  return ordersList.map((order) => {
+    const normalizedItems = (order.items || []).map((item) => {
+      const localProduct = allProducts.find(
+        (product) => product.id === item.productId
       );
 
-      if (existingItemIndex > -1) {
-        const newCart = [...prevCart];
-        newCart[existingItemIndex].quantity += quantity;
-        return newCart;
-      } else {
-        return [
-          ...prevCart,
-          {
-            product,
-            size: variantSize,
-            price: variant.price,
-            quantity,
-          },
-        ];
-      }
+      return {
+        product: localProduct || {
+          id: item.productId,
+          name: item.name,
+          nameHindi: "",
+          category: "",
+          variants: [{ quantity: item.quantity, price: item.price }],
+          imageUrl: item.imageUrl || "",
+        },
+        quantity: item.quantity,
+        price: item.price,
+        count: item.count,
+      };
     });
+
+    return {
+      ...order,
+      items: normalizedItems,
+    };
+  });
+}
+
+export function CartProvider({ children, initialCart, initialOrders }) {
+  const { serverUrl, isLoggedIn, loding } = useContext(userDataContext);
+  const didHydrateRef = useRef(initialCart !== undefined && initialOrders !== undefined);
+
+  const [dbProducts, setDbProducts] = useState(staticProducts);
+
+  const [cart, setCart] = useState(() => {
+    if (initialCart !== undefined) {
+      return normalizeCartItems(initialCart?.items || [], staticProducts);
+    }
+    return [];
+  });
+
+  const [orders, setOrders] = useState(() => {
+    if (initialOrders !== undefined) {
+      return normalizeOrders(initialOrders || [], staticProducts);
+    }
+    if (typeof window === "undefined") return [];
+
+    const savedOrders = localStorage.getItem("dronagiri_orders");
+    if (!savedOrders) return [];
+
+    try {
+      return normalizeOrders(JSON.parse(savedOrders), staticProducts);
+    } catch (error) {
+      console.error("Error parsing order data", error);
+      return [];
+    }
+  });
+
+  const [isLoaded, setIsLoaded] = useState(
+    initialCart !== undefined && initialOrders !== undefined ? true : false
+  );
+
+  const fetchDbProducts = async () => {
+    try {
+      const result = await axios.get(`${serverUrl}/api/products`);
+      if (result.data) {
+        setDbProducts(result.data);
+        
+        // Re-normalize cart with fresh products
+        setCart((prevCart) => {
+          const rawItems = prevCart.map(item => ({
+            productId: item.product.id,
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.price,
+            count: item.count
+          }));
+          return normalizeCartItems(rawItems, result.data);
+        });
+
+        // Re-normalize orders with fresh products
+        setOrders((prevOrders) => {
+          const rawOrders = prevOrders.map(order => ({
+            ...order,
+            items: order.items.map(item => ({
+              productId: item.product.id,
+              name: item.product.name,
+              quantity: item.quantity,
+              price: item.price,
+              count: item.count
+            }))
+          }));
+          return normalizeOrders(rawOrders, result.data);
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching db products:", error);
+    }
   };
 
-  const removeFromCart = (productId, variantSize) => {
-    setCart((prevCart) =>
-      prevCart.filter((item) => !(item.product.id === productId && item.size === variantSize))
-    );
+  useEffect(() => {
+    fetchDbProducts();
+  }, [serverUrl]);
+
+  const applyBackendCart = (backendCart, currentProducts = dbProducts) => {
+    setCart(normalizeCartItems(backendCart?.items, currentProducts));
   };
 
-  const updateQuantity = (productId, variantSize, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(productId, variantSize);
+  const fetchCart = async () => {
+    if (!isLoggedIn) {
+      setCart([]);
+      setIsLoaded(true);
       return;
     }
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.product.id === productId && item.size === variantSize
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
+
+    setIsLoaded(false);
+    try {
+      const result = await axios.get(`${serverUrl}/api/cart`, {
+        withCredentials: true,
+      });
+      applyBackendCart(result.data);
+    } catch (error) {
+      console.error("Error loading cart", error);
+      setCart([]);
+    } finally {
+      setIsLoaded(true);
+    }
   };
 
-  const clearCart = () => {
-    setCart([]);
+  const fetchOrders = async () => {
+    if (!isLoggedIn) {
+      setOrders([]);
+      return;
+    }
+
+    try {
+      const result = await axios.get(`${serverUrl}/api/orders`, {
+        withCredentials: true,
+      });
+      setOrders(normalizeOrders(result.data, dbProducts));
+    } catch (error) {
+      console.error("Error loading orders", error);
+      setOrders([]);
+    }
   };
 
-  const addOrder = (order) => {
-    setOrders((prevOrders) => [
+  useEffect(() => {
+    if (loding) return;
+
+    if (didHydrateRef.current) {
+      didHydrateRef.current = false;
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadCartAndOrders = async () => {
+      if (!isLoggedIn) {
+        if (isMounted) {
+          setCart([]);
+          setOrders([]);
+          setIsLoaded(true);
+        }
+        return;
+      }
+
+      if (isMounted) setIsLoaded(false);
+
+      try {
+        const [cartRes, ordersRes] = await Promise.all([
+          axios.get(`${serverUrl}/api/cart`, { withCredentials: true }),
+          axios.get(`${serverUrl}/api/orders`, { withCredentials: true })
+        ]);
+        if (isMounted) {
+          applyBackendCart(cartRes.data);
+          setOrders(normalizeOrders(ordersRes.data));
+        }
+      } catch (error) {
+        console.error("Error loading cart or orders", error);
+        if (isMounted) {
+          setCart([]);
+          setOrders([]);
+        }
+      } finally {
+        if (isMounted) setIsLoaded(true);
+      }
+    };
+
+    const timeoutId = window.setTimeout(loadCartAndOrders, 0);
+
+    return () => {
+      isMounted = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [isLoggedIn, loding, serverUrl]);
+
+  useEffect(() => {
+    localStorage.setItem("dronagiri_orders", JSON.stringify(orders));
+  }, [orders]);
+
+  const addToCart = async (product, variantQuantity, count = 1) => {
+    const variant =
+      product.variants.find((v) => v.quantity === variantQuantity) ||
+      product.variants[0];
+
+    const result = await axios.post(
+      `${serverUrl}/api/cart/add`,
       {
-        ...order,
-        createdAt: order.createdAt || new Date().toISOString(),
+        productId: product.id,
+        name: product.name,
+        quantity: variantQuantity,
+        price: variant.price,
+        imageUrl: product.imageUrl || "",
+        count,
       },
-      ...prevOrders,
-    ]);
+      { withCredentials: true }
+    );
+
+    applyBackendCart(result.data);
+    return result.data;
+  };
+
+  const removeFromCart = async (productId, variantQuantity) => {
+    const result = await axios.delete(`${serverUrl}/api/cart/remove`, {
+      withCredentials: true,
+      data: {
+        productId,
+        quantity: variantQuantity,
+      },
+    });
+
+    applyBackendCart(result.data);
+    return result.data;
+  };
+
+  const updateQuantity = async (productId, variantQuantity, newCount) => {
+    const result = await axios.put(
+      `${serverUrl}/api/cart/update`,
+      {
+        productId,
+        quantity: variantQuantity,
+        count: newCount,
+      },
+      { withCredentials: true }
+    );
+
+    applyBackendCart(result.data);
+    return result.data;
+  };
+
+  const clearCart = async () => {
+    const result = await axios.delete(`${serverUrl}/api/cart/clear`, {
+      withCredentials: true,
+    });
+
+    applyBackendCart(result.data);
+    return result.data;
+  };
+
+  const addOrder = async (orderData) => {
+    if (!isLoggedIn) {
+      const offlineOrder = {
+        ...orderData,
+        createdAt: orderData.createdAt || new Date().toISOString(),
+      };
+      setOrders((prevOrders) => [offlineOrder, ...prevOrders]);
+      return offlineOrder;
+    }
+
+    try {
+      const result = await axios.post(`${serverUrl}/api/orders`, orderData, {
+        withCredentials: true,
+      });
+      const [normalized] = normalizeOrders([result.data]);
+      setOrders((prevOrders) => [normalized, ...prevOrders]);
+      return normalized;
+    } catch (error) {
+      console.error("Error creating order:", error);
+      throw error;
+    }
   };
 
   const clearOrders = () => {
@@ -115,11 +316,11 @@ export function CartProvider({ children }) {
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    return cart.reduce((total, item) => total + item.price * item.count, 0);
   };
 
   const getCartCount = () => {
-    return cart.reduce((count, item) => count + item.quantity, 0);
+    return cart.reduce((count, item) => count + item.count, 0);
   };
 
   return (
@@ -128,6 +329,9 @@ export function CartProvider({ children }) {
         cart,
         orders,
         isLoaded,
+        products: dbProducts,
+        fetchCart,
+        fetchOrders,
         addToCart,
         removeFromCart,
         updateQuantity,

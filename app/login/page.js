@@ -57,11 +57,15 @@ function LoginForm() {
     setErrors({});
 
     try {
-      await login(email.trim(), password);
+      const user = await login(email.trim(), password);
       toast.success("Welcome back! 🌿", {
         description: "You are now logged in to Dronagiri Farm.",
       });
-      router.replace(redirectTo);
+      if (!user.address || !user.pincode || !user.phone) {
+        router.replace(`/address?redirect=${encodeURIComponent(redirectTo)}`);
+      } else {
+        router.replace(redirectTo);
+      }
     } catch (error) {
       const message =
         error?.response?.data?.message ||

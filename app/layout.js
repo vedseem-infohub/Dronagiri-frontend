@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import UserContext from "@/context/UserContext";
 import { Toaster } from "@/components/ui/sonner";
+import { cookies } from "next/headers";
+import axios from "axios";
 
 
 const playfair = Playfair_Display({
@@ -32,7 +34,41 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  let initialUser = undefined;
+  let initialCart = undefined;
+  let initialOrders = undefined;
+
+  if (token) {
+    const serverUrl = "http://localhost:8000";
+    try {
+      const [userRes, cartRes, ordersRes] = await Promise.all([
+        axios.get(`${serverUrl}/api/user/current`, {
+          headers: { Cookie: `token=${token}` }
+        }),
+        axios.get(`${serverUrl}/api/cart`, {
+          headers: { Cookie: `token=${token}` }
+        }),
+        axios.get(`${serverUrl}/api/orders`, {
+          headers: { Cookie: `token=${token}` }
+        })
+      ]);
+
+      initialUser = userRes.data;
+      initialCart = cartRes.data;
+      initialOrders = ordersRes.data;
+    } catch (err) {
+      console.error("Error fetching SSR initial data:", err.message);
+    }
+  } else {
+    initialUser = null;
+    initialCart = null;
+    initialOrders = null;
+  }
+
   return (
     <html
       lang="en"
@@ -40,14 +76,14 @@ export default function RootLayout({ children }) {
       className={`${playfair.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-[family-name:var(--font-poppins)] bg-[#fdfbf7]">
-        <UserContext>
-          <CartProvider>
+        <UserContext initialUser={initialUser}>
+          <CartProvider initialCart={initialCart} initialOrders={initialOrders}>
             <TooltipProvider>
               {children}
               <Toaster position="bottom-right" closeButton richColors />
             </TooltipProvider>
           </CartProvider>
-            </UserContext>
+        </UserContext>
       </body>
     </html>
   );

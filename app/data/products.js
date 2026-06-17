@@ -6,9 +6,9 @@ export const products = [
     category: "Spices",
     description: "Pure turmeric powder with rich curcumin content. Anti-inflammatory & immunity boosting.",
     variants: [
-      { size: "500g", price: 450 },
-      { size: "200g", price: 189 },
-      { size: "100g", price: 95 },
+      { quantity: "500g", price: 450 },
+      { quantity: "200g", price: 189 },
+      { quantity: "100g", price: 95 },
     ],
   },
   {
@@ -18,8 +18,8 @@ export const products = [
     category: "Millets",
     description: "Finger millet rich in calcium, fiber, and iron. Great for bone health.",
     variants: [
-      { size: "1kg", price: 250 },
-      { size: "500g", price: 150 },
+      { quantity: "1kg", price: 250 },
+      { quantity: "500g", price: 150 },
     ],
   },
   {
@@ -29,8 +29,8 @@ export const products = [
     category: "Pulses",
     description: "Black-eyed peas packed with protein and fiber. Farm-fresh quality.",
     variants: [
-      { size: "1kg", price: 235 },
-      { size: "500g", price: 115 },
+      { quantity: "1kg", price: 235 },
+      { quantity: "500g", price: 115 },
     ],
   },
   {
@@ -40,8 +40,8 @@ export const products = [
     category: "Nuts & Seeds",
     description: "Fresh groundnuts high in protein and healthy fats. Great for snacking.",
     variants: [
-      { size: "1kg", price: 305 },
-      { size: "500g", price: 149 },
+      { quantity: "1kg", price: 305 },
+      { quantity: "500g", price: 149 },
     ],
   },
   {
@@ -51,8 +51,8 @@ export const products = [
     category: "Pulses",
     description: "High-protein soyabeans, complete plant protein source for a healthy diet.",
     variants: [
-      { size: "1kg", price: 220 },
-      { size: "500g", price: 109 },
+      { quantity: "1kg", price: 220 },
+      { quantity: "500g", price: 109 },
     ],
   },
   {
@@ -62,8 +62,8 @@ export const products = [
     category: "Pulses",
     description: "Premium kidney beans — rich in protein and iron. Perfect for Rajma chawal!",
     variants: [
-      { size: "1kg", price: 380 },
-      { size: "500g", price: 189 },
+      { quantity: "1kg", price: 380 },
+      { quantity: "500g", price: 189 },
     ],
   },
   {
@@ -73,8 +73,8 @@ export const products = [
     category: "Sweeteners",
     description: "Natural jaggery powder — mineral-rich healthy alternative to refined sugar.",
     variants: [
-      { size: "1kg", price: 190 },
-      { size: "500g", price: 95 },
+      { quantity: "1kg", price: 190 },
+      { quantity: "500g", price: 95 },
     ],
   },
   {
@@ -84,8 +84,8 @@ export const products = [
     category: "Sweeteners",
     description: "Traditional solid jaggery cubes — pure, unrefined, natural sweetness.",
     variants: [
-      { size: "1kg", price: 305 },
-      { size: "500g", price: 149 },
+      { quantity: "1kg", price: 305 },
+      { quantity: "500g", price: 149 },
     ],
   },
   {
@@ -95,8 +95,8 @@ export const products = [
     category: "Sweeteners",
     description: "Pure natural sugar — clean, chemical-free, straight from the farm.",
     variants: [
-      { size: "1kg", price: 160 },
-      { size: "500g", price: 75 },
+      { quantity: "1kg", price: 160 },
+      { quantity: "500g", price: 75 },
     ],
   },
   {
@@ -106,8 +106,8 @@ export const products = [
     category: "Pulses",
     description: "Red lentils — quick-cooking, high-protein, iron-rich comfort food.",
     variants: [
-      { size: "1kg", price: 250 },
-      { size: "500g", price: 125 },
+      { quantity: "1kg", price: 250 },
+      { quantity: "500g", price: 125 },
     ],
   },
   {
@@ -117,8 +117,8 @@ export const products = [
     category: "Pulses",
     description: "White urad dal — excellent source of protein and dietary fiber.",
     variants: [
-      { size: "1kg", price: 260 },
-      { size: "500g", price: 129 },
+      { quantity: "1kg", price: 260 },
+      { quantity: "500g", price: 129 },
     ],
   },
   {
@@ -128,8 +128,8 @@ export const products = [
     category: "Pulses",
     description: "Split chickpeas — low GI, high-fiber, protein-packed farm staple.",
     variants: [
-      { size: "1kg", price: 190 },
-      { size: "500g", price: 95 },
+      { quantity: "1kg", price: 190 },
+      { quantity: "500g", price: 95 },
     ],
   },
   {
@@ -139,8 +139,8 @@ export const products = [
     category: "Pulses",
     description: "Green moong dal — light, digestible, protein-rich ayurvedic superfood.",
     variants: [
-      { size: "1kg", price: 250 },
-      { size: "500g", price: 125 },
+      { quantity: "1kg", price: 250 },
+      { quantity: "500g", price: 125 },
     ],
   },
   {
@@ -150,8 +150,8 @@ export const products = [
     category: "Pulses",
     description: "Toor dal — the heart of Indian cooking, loaded with protein and folate.",
     variants: [
-      { size: "1kg", price: 260 },
-      { size: "500g", price: 145 },
+      { quantity: "1kg", price: 260 },
+      { quantity: "500g", price: 145 },
     ],
   },
   {
@@ -161,9 +161,9 @@ export const products = [
     category: "Rice",
     description: "Premium long-grain whole basmati — aromatic, aged, restaurant-quality.",
     variants: [
-      { size: "10kg", price: 1910 },
-      { size: "5kg", price: 955 },
-      { size: "1kg", price: 195 },
+      { quantity: "10kg", price: 1910 },
+      { quantity: "5kg", price: 955 },
+      { quantity: "1kg", price: 195 },
     ],
   },
   {
@@ -173,9 +173,9 @@ export const products = [
     category: "Rice",
     description: "Broken basmati rice — same premium aroma, perfect for khichdi and biryani.",
     variants: [
-      { size: "10kg", price: 1750 },
-      { size: "5kg", price: 875 },
-      { size: "1kg", price: 175 },
+      { quantity: "10kg", price: 1750 },
+      { quantity: "5kg", price: 875 },
+      { quantity: "1kg", price: 175 },
     ],
   },
   {
@@ -185,9 +185,9 @@ export const products = [
     category: "Wheat & Grains",
     description: "Ancient emmer wheat — low gluten, diabetic-friendly, high nutritional value.",
     variants: [
-      { size: "10kg", price: 2160 },
-      { size: "5kg", price: 1080 },
-      { size: "1kg", price: 220 },
+      { quantity: "10kg", price: 2160 },
+      { quantity: "5kg", price: 1080 },
+      { quantity: "1kg", price: 220 },
     ],
   },
   {
@@ -197,9 +197,9 @@ export const products = [
     category: "Wheat & Grains",
     description: "Premium Sihore variety wheat — superior taste, excellent for chapati flour.",
     variants: [
-      { size: "10kg", price: 1160 },
-      { size: "5kg", price: 580 },
-      { size: "1kg", price: 120 },
+      { quantity: "10kg", price: 1160 },
+      { quantity: "5kg", price: 580 },
+      { quantity: "1kg", price: 120 },
     ],
   },
   {
@@ -209,8 +209,8 @@ export const products = [
     category: "Millets",
     description: "Sorghum millet — gluten-free, high fiber, powerhouse of nutrients.",
     variants: [
-      { size: "1kg", price: 140 },
-      { size: "500g", price: 70 },
+      { quantity: "1kg", price: 140 },
+      { quantity: "500g", price: 70 },
     ],
   },
   {
@@ -220,8 +220,8 @@ export const products = [
     category: "Oils & Ghee",
     description: "Pure A2 desi ghee — traditionally churned, rich in healthy fats and vitamins.",
     variants: [
-      { size: "1kg", price: 2490 },
-      { size: "500g", price: 1245 },
+      { quantity: "1kg", price: 2490 },
+      { quantity: "500g", price: 1245 },
     ],
     badge: "Premium",
   },
@@ -232,9 +232,9 @@ export const products = [
     category: "Oils & Ghee",
     description: "Cold-pressed groundnut oil — pure, unrefined, heart-healthy cooking oil.",
     variants: [
-      { size: "5kg", price: 1730 },
-      { size: "1kg", price: 350 },
-      { size: "500g", price: 175 },
+      { quantity: "5kg", price: 1730 },
+      { quantity: "1kg", price: 350 },
+      { quantity: "500g", price: 175 },
     ],
   },
   {
@@ -244,9 +244,9 @@ export const products = [
     category: "Oils & Ghee",
     description: "Pure sunflower oil — light, healthy, and perfect for everyday cooking.",
     variants: [
-      { size: "5kg", price: 173 },
-      { size: "1kg", price: 350 },
-      { size: "500g", price: 175 },
+      { quantity: "5kg", price: 173 },
+      { quantity: "1kg", price: 350 },
+      { quantity: "500g", price: 175 },
     ],
   },
 ];

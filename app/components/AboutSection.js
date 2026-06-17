@@ -28,7 +28,7 @@ export default function AboutSection() {
   return (
     <section
       id="about"
-      className="py-20 px-4 bg-gradient-to-br from-green-900 via-green-800 to-lime-900 relative overflow-hidden"
+      className="py-20 px-4 bg-gradient-to-br from-[#223614] via-[#1c2e10] to-[#14220c] relative overflow-hidden"
     >
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-white/5 blur-3xl -translate-x-1/2 -translate-y-1/2" />
@@ -39,21 +39,21 @@ export default function AboutSection() {
           {/* Left: Text Content */}
           <Reveal delay={0.1}>
           <div>
-            <span className="inline-block text-xs font-bold tracking-widest text-amber-400 uppercase bg-amber-400/10 border border-amber-400/30 px-4 py-1.5 rounded-full mb-6">
+            <span className="inline-block text-[#8C6A43] text-xs font-bold tracking-[0.3em] uppercase mb-4 border-b-2 border-[#8C6A43]/40 pb-2">
               About Us
             </span>
-            <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
+            <h2 className="font-[family-name:var(--font-playfair)] text-4xl sm:text-5xl font-bold text-[#F7F1E8] mb-6 leading-tight">
               Straight from the
               <br />
               <span className="shimmer-text">Heart of Dronagiri</span>
             </h2>
-            <p className="text-green-200 text-lg leading-relaxed mb-6">
+            <p className="text-[#D9CBB5] text-lg font-light leading-relaxed mb-6">
               Nestled in the fertile soils of Dronagiri, our farm has been
               producing the finest organic foods for generations. We believe
-              that good health begins with what you eat â€” and what you eat
+              that good health begins with what you eat — and what you eat
               should be pure.
             </p>
-            <p className="text-green-300 text-base leading-relaxed mb-8">
+            <p className="text-white/80 text-base leading-relaxed mb-8">
               From heirloom wheat varieties like Khapli to pure A2 Desi Ghee,
               every product in our range is grown, harvested, and packed with
               care. No preservatives. No artificial colors. Just nature&apos;s
@@ -62,7 +62,7 @@ export default function AboutSection() {
             <a
               id="about-contact-btn"
               href="#contact"
-              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-bold px-6 py-3 rounded-full transition-all duration-300 hover:-translate-y-0.5 shadow-lg hover:shadow-amber-500/40"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] text-white font-bold px-7 py-3.5 rounded-full transition-all duration-300 hover:-translate-y-0.5 shadow-lg hover:shadow-amber-900/40"
             >
               Get in Touch
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -76,11 +76,11 @@ export default function AboutSection() {
             {values.map(({ Icon, title, desc }) => (
               <div
                 key={title}
-                className="bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:bg-white/15 transition-all duration-300 hover:-translate-y-1"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5 hover:bg-white/10 hover:border-[#8C6A43]/30 transition-all duration-300 hover:-translate-y-1"
               >
-                <Icon className="mb-3 h-8 w-8 text-amber-300" aria-hidden="true" />
-                <h3 className="text-white font-bold text-base mb-2">{title}</h3>
-                <p className="text-green-300 text-sm leading-relaxed">{desc}</p>
+                <Icon className="mb-3 h-8 w-8 text-amber-400" aria-hidden="true" />
+                <h3 className="text-[#F7F1E8] font-bold text-base mb-2">{title}</h3>
+                <p className="text-[#D9CBB5] text-sm leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>

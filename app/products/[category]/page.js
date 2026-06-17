@@ -5,7 +5,6 @@ import Footer from "../../components/Footer";
 import ProductHero from "../../components/ProductHero";
 import ProductCard from "../../components/ProductCard";
 import {
-  products,
   productCategories,
   categoryToSlug,
   slugToCategory,
@@ -41,9 +40,15 @@ export default async function CategoryProductsPage({ params }) {
     notFound();
   }
 
-  const categoryProducts = products.filter(
-    (product) => product.category === category
-  );
+  let categoryProducts = [];
+  try {
+    const res = await fetch(`http://localhost:8000/api/products?category=${encodeURIComponent(category)}`, { cache: "no-store" });
+    if (res.ok) {
+      categoryProducts = await res.json();
+    }
+  } catch (err) {
+    console.error("Error fetching category products:", err);
+  }
 
   return (
     <>
@@ -58,7 +63,7 @@ export default async function CategoryProductsPage({ params }) {
           <div className="flex flex-wrap gap-2 justify-center mb-10">
             <Link
               href="/products"
-              className="border-2 border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600 bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+              className="border-2 border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
             >
               All Products 
             </Link>
@@ -68,8 +73,8 @@ export default async function CategoryProductsPage({ params }) {
                 href={`/products/${categoryToSlug(item)}`}
                 className={`px-4 py-2 rounded-full text-sm font-semibold border-2 transition-all duration-200 ${
                   item === category
-                    ? "bg-green-600 border-green-600 text-white shadow-md"
-                    : "border-gray-200 text-gray-600 hover:border-green-400 hover:text-green-600 bg-white"
+                    ? "bg-[#223614] border-[#223614] text-[#F7F1E8] shadow-md"
+                    : "border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white"
                 }`}
               >
                 {item}
