@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 
 import Link from "next/link";
 import {
@@ -37,7 +38,18 @@ const getStatusTone = (status) => {
 };
 
 export default function OrdersPage() {
-  const { orders, isLoaded } = useCart();
+  const { orders, isLoaded, fetchOrders } = useCart();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!fetchOrders) return;
+    const interval = setInterval(async () => {
+      setIsRefreshing(true);
+      await fetchOrders();
+      setIsRefreshing(false);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
 
   return (
     <>
@@ -127,13 +139,13 @@ export default function OrdersPage() {
                           <h3 className="font-bold text-gray-900">
                             {order.orderId}
                           </h3>
-                          {/* <span
+                          <span
                             className={`inline-flex items-center border px-2.5 py-1 rounded-full text-[11px] font-bold ${getStatusTone(
                               order.status
                             )}`}
                           >
-                            {order.status}
-                          </span> */}
+                            {order.status === "Order Sent to Admin" ? "Pending" : order.status || "Pending"}
+                          </span>
                         </div>
                         <p className="text-sm text-gray-400 mt-1 flex items-center gap-1.5">
                           <CalendarDays className="h-4 w-4" />
