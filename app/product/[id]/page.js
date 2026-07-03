@@ -7,7 +7,7 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   
   try {
-    const res = await fetch(`http://localhost:8000/api/products/${id}`, { cache: "no-store" });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
     if (!res.ok) {
       return {
         title: "Product Not Found | Dronagiri Farm",
@@ -33,13 +33,13 @@ export default async function ProductDetailPage({ params }) {
   
   try {
     // Fetch individual product details
-    const productRes = await fetch(`http://localhost:8000/api/products/${id}`, { cache: "no-store" });
+    const productRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
     if (productRes.ok) {
       product = await productRes.json();
     }
     
     // Fetch all products to recommend other items in the same category
-    const allRes = await fetch(`http://localhost:8000/api/products`, { cache: "no-store" });
+    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products`, { cache: "no-store" });
     if (allRes.ok) {
       allProducts = await allRes.json();
     }

@@ -18,7 +18,7 @@ export const metadata = {
 export default async function ProductsPage() {
   let productsList = [];
   try {
-    const res = await fetch("http://localhost:8000/api/products", { cache: "no-store" });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products`, { cache: "no-store" });
     if (res.ok) {
       productsList = await res.json();
     }

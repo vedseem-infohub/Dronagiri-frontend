@@ -6,7 +6,7 @@ import React, { createContext, useEffect, useState } from 'react'
 export const userDataContext = createContext()
 
 const UserContext = ({children, initialUser}) => {
-    const serverUrl = "http://localhost:8000"
+    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"
     const [userData, setuserData] = useState(initialUser || null)
     const [loding, setloding] = useState(initialUser === undefined)
 

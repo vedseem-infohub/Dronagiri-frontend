@@ -43,7 +43,7 @@ export default async function RootLayout({ children }) {
   let initialOrders = undefined;
 
   if (token) {
-    const serverUrl = "http://localhost:8000";
+    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000";
     try {
       const [userRes, cartRes, ordersRes] = await Promise.all([
         axios.get(`${serverUrl}/api/user/current`, {

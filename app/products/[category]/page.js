@@ -42,7 +42,7 @@ export default async function CategoryProductsPage({ params }) {
 
   let categoryProducts = [];
   try {
-    const res = await fetch(`http://localhost:8000/api/products?category=${encodeURIComponent(category)}`, { cache: "no-store" });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products?category=${encodeURIComponent(category)}`, { cache: "no-store" });
     if (res.ok) {
       categoryProducts = await res.json();
     }

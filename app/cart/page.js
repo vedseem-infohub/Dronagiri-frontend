@@ -74,9 +74,16 @@ export default function CartPage() {
     }
   }, [user]);
 
-  // Scroll to top on mount
+  // Scroll to top on mount and load Razorpay script
   useEffect(() => {
     window.scrollTo(0, 0);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   // Pricing calculations
@@ -184,7 +191,7 @@ export default function CartPage() {
         count: item.count
       }));
 
-      await addOrder({
+      const orderDetails = {
         orderId: orderNumber,
         customer: {
           name: formData.name,
@@ -200,7 +207,80 @@ export default function CartPage() {
         total: finalTotal,
         paymentMethod: formData.paymentMethod,
         source: "admin",
-      });
+      };
+
+      if (formData.paymentMethod === "online") {
+        try {
+          const { data: { orderId: rzpOrderId, amount, currency, keyId } } = await axios.post(
+            `${serverUrl}/api/payments/create-order`,
+            { amount: finalTotal },
+            { withCredentials: true }
+          );
+
+          const options = {
+            key: keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+            amount: amount,
+            currency: currency,
+            name: "Dronagiri Farms",
+            description: "Fresh Organic Products",
+            order_id: rzpOrderId,
+            handler: async function (response) {
+              try {
+                const verifyRes = await axios.post(
+                  `${serverUrl}/api/payments/verify`,
+                  {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    orderDetails: orderDetails,
+                  },
+                  { withCredentials: true }
+                );
+                
+                setCompletedOrderDetails({
+                  orderId: orderNumber,
+                  name: formData.name,
+                  phone: formData.phone,
+                  address: deliveryAddress,
+                  total: finalTotal,
+                });
+          
+                setOrderComplete(true);
+                toast.success("Payment successful and order placed!");
+                await clearCart();
+              } catch (verifyError) {
+                toast.error(verifyError?.response?.data?.message || "Payment verification failed.");
+              } finally {
+                setIsSubmitting(false);
+              }
+            },
+            prefill: {
+              name: formData.name,
+              email: formData.email,
+              contact: formData.phone,
+            },
+            theme: {
+              color: "#8C6A43",
+            },
+            modal: {
+              ondismiss: function () {
+                setIsSubmitting(false);
+                toast.error("Payment cancelled.");
+              }
+            }
+          };
+
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } catch (error) {
+          setIsSubmitting(false);
+          toast.error(error?.response?.data?.message || "Failed to initialize payment.");
+        }
+        return; // Early return for online flow
+      }
+
+      // COD Flow
+      await addOrder(orderDetails);
 
       setCompletedOrderDetails({
         orderId: orderNumber,
@@ -216,7 +296,6 @@ export default function CartPage() {
     } catch (error) {
       console.error("Failed to place order:", error);
       toast.error(error?.response?.data?.message || "Failed to place order. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -694,23 +773,23 @@ export default function CartPage() {
 
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, paymentMethod: "bank" }))}
-                          className={`flex items-center justify-between p-3 rounded-2xl border text-xs font-bold transition-all duration-200 text-left ${formData.paymentMethod === "bank"
+                          onClick={() => setFormData(prev => ({ ...prev, paymentMethod: "online" }))}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-xs font-bold transition-all duration-200 text-left ${formData.paymentMethod === "online"
                               ? "border-[#8C6A43] bg-[#8C6A43]/10 text-[#8C6A43] shadow-sm"
                               : "border-gray-200 text-gray-500 hover:bg-gray-50"
                             }`}
                         >
                           <span className="flex items-center gap-1.5">
                             <CreditCard className="h-4 w-4" />
-                            Bank Transfer
+                            Online Payment
                           </span>
-                          {formData.paymentMethod === "bank" && <CheckCircle className="h-4 w-4 fill-[#8C6A43] text-white" />}
+                          {formData.paymentMethod === "online" && <CheckCircle className="h-4 w-4 fill-[#8C6A43] text-white" />}
                         </button>
                       </div>
                       <p className="text-[10px] text-gray-400 leading-normal mt-1">
                         {formData.paymentMethod === "cod"
                           ? "Pay securely in cash or via any UPI app at the time of doorstep delivery."
-                          : "Transfer directly to Dronagiri Farm Bank A/c. Details will be provided on confirmation."
+                          : "Pay securely via Razorpay (UPI, Credit/Debit Card, Netbanking)."
                         }
                       </p>
                     </div>
