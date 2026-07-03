@@ -171,7 +171,10 @@ export default function OrdersPage() {
                           Payment
                         </p>
                         <p className="text-gray-900 font-bold mt-1 uppercase">
-                          {order.paymentMethod || "COD"}
+                          {order.paymentMethod === 'online' ? 'ONLINE' : (order.paymentMethod || 'COD')}
+                        </p>
+                        <p className={`text-[10px] font-bold mt-0.5 ${order.paymentStatus === 'Paid' ? 'text-green-600' : order.paymentStatus === 'Failed' ? 'text-red-500' : 'text-amber-600'}`}>
+                          ({order.paymentStatus || (order.paymentMethod === 'online' ? 'Paid' : 'Pending')})
                         </p>
                       </div>
                       <div className="bg-[#223614]/10 rounded-2xl p-3 col-span-2 sm:col-span-1">
