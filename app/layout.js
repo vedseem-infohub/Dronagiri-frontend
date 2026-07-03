@@ -64,9 +64,9 @@ export default async function RootLayout({ children }) {
       console.error("Error fetching SSR initial data:", err.message);
     }
   } else {
-    initialUser = null;
-    initialCart = null;
-    initialOrders = null;
+    initialUser = undefined;
+    initialCart = undefined;
+    initialOrders = undefined;
   }
 
   return (
