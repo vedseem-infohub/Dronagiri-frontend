@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-  
+
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
     if (!res.ok) {
@@ -27,17 +27,17 @@ export async function generateMetadata({ params }) {
 
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
-  
+
   let product = null;
   let allProducts = [];
-  
+
   try {
     // Fetch individual product details
     const productRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
     if (productRes.ok) {
       product = await productRes.json();
     }
-    
+
     // Fetch all products to recommend other items in the same category
     const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products`, { cache: "no-store" });
     if (allRes.ok) {
@@ -46,11 +46,11 @@ export default async function ProductDetailPage({ params }) {
   } catch (error) {
     console.error("Error fetching product details or recommendations:", error);
   }
-  
+
   if (!product) {
     notFound();
   }
-  
+
   return (
     <>
       <Navbar solid={true} />

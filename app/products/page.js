@@ -40,13 +40,13 @@ export default async function ProductsPage() {
           <div className="flex flex-wrap gap-2 justify-center mb-10">
             {productCategories.map((category, i) => (
               <Reveal key={category} delay={i * 0.1}>
-              <Link
-                key={category}
-                href={`/products/${categoryToSlug(category)}`}
-                className="border-2 border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
-              >
-                {category}
-              </Link>
+                <Link
+                  key={category}
+                  href={`/products/${categoryToSlug(category)}`}
+                  className="border-2 border-[#8C6A43]/20 text-[#223614]/80 hover:border-[#8C6A43] hover:text-[#8C6A43] bg-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                >
+                  {category}
+                </Link>
               </Reveal>
             ))}
           </div>
@@ -54,10 +54,10 @@ export default async function ProductsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {productsList.map((product, i) => (
               <Reveal key={product.id} delay={i * 0.1}>
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                />
               </Reveal>
             ))}
           </div>
