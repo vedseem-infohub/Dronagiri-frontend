@@ -5,25 +5,25 @@ import React, { createContext, useEffect, useState } from 'react'
 
 export const userDataContext = createContext()
 
-const UserContext = ({children, initialUser}) => {
-    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"
+const UserContext = ({ children, initialUser }) => {
+    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "https://dronagiri-backend-e4ja.onrender.com"
     const [userData, setuserData] = useState(initialUser || null)
     const [loding, setloding] = useState(initialUser === undefined)
 
     const handleCurrentUser = async () => {
         setloding(true)
         try {
-            const result = await axios.get(`${serverUrl}/api/user/current`, {withCredentials: true})
+            const result = await axios.get(`${serverUrl}/api/user/current`, { withCredentials: true })
             setuserData(result.data)
             return result.data
         } catch (error) {
             setuserData(null)
             console.log(error)
             return null
-        }finally {
+        } finally {
             setloding(false)
         }
-      
+
     }
 
     const login = async (email, password) => {
@@ -47,7 +47,7 @@ const UserContext = ({children, initialUser}) => {
         }
         let isMounted = true
 
-        axios.get(`${serverUrl}/api/user/current`, {withCredentials: true})
+        axios.get(`${serverUrl}/api/user/current`, { withCredentials: true })
             .then((result) => {
                 if (isMounted) setuserData(result.data)
             })
@@ -67,19 +67,19 @@ const UserContext = ({children, initialUser}) => {
     }, [initialUser])
 
     const value = {
-    serverUrl,
-    userData,
-    setuserData,
-    isLoggedIn: Boolean(userData),
-    login,
-    logout,
-    refreshCurrentUser: handleCurrentUser,
-    loding
-      }
-    
-  return <userDataContext.Provider value={value}>
-    {children}
-  </userDataContext.Provider>
+        serverUrl,
+        userData,
+        setuserData,
+        isLoggedIn: Boolean(userData),
+        login,
+        logout,
+        refreshCurrentUser: handleCurrentUser,
+        loding
+    }
+
+    return <userDataContext.Provider value={value}>
+        {children}
+    </userDataContext.Provider>
 }
 
 export default UserContext

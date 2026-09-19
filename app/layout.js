@@ -21,6 +21,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://dronagirifarms.co.in"),
   title: "Dronagiri Farm | Pure Farm-Fresh Organic Products",
   description:
     "Dronagiri Farm offers 100% natural, farm-fresh organic products including dals, grains, spices, oils, and ghee. Sourced directly from our farm to your table.",
@@ -43,25 +44,26 @@ export default async function RootLayout({ children }) {
   let initialOrders = undefined;
 
   if (token) {
-    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000";
+    const serverUrl = process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "https://dronagiri-backend-e4ja.onrender.com";
     try {
+      const authHeaders = {
+        Cookie: `token=${token}`,
+        Authorization: `Bearer ${token}`
+      };
       const [userRes, cartRes, ordersRes] = await Promise.all([
-        axios.get(`${serverUrl}/api/user/current`, {
-          headers: { Cookie: `token=${token}` }
-        }),
-        axios.get(`${serverUrl}/api/cart`, {
-          headers: { Cookie: `token=${token}` }
-        }),
-        axios.get(`${serverUrl}/api/orders`, {
-          headers: { Cookie: `token=${token}` }
-        })
+        axios.get(`${serverUrl}/api/user/current`, { headers: authHeaders }),
+        axios.get(`${serverUrl}/api/cart`, { headers: authHeaders }),
+        axios.get(`${serverUrl}/api/orders`, { headers: authHeaders })
       ]);
 
       initialUser = userRes.data;
       initialCart = cartRes.data;
       initialOrders = ordersRes.data;
     } catch (err) {
-      console.error("Error fetching SSR initial data:", err.message);
+      // If token is invalid, expired, or from another environment, treat as guest session
+      initialUser = null;
+      initialCart = null;
+      initialOrders = null;
     }
   } else {
     initialUser = undefined;
