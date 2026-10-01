@@ -9,8 +9,11 @@ import { useCart } from "@/context/CartContext";
 // import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { userDataContext } from "@/context/UserContext";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
 
 export default function Navbar({ solid = false }) {
+  const { settings } = useSiteSettings();
+  const logoSrc = settings?.logoUrl || "/logo2.png";
   const [scrolledState, setScrolledState] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { getCartCount } = useCart();
@@ -22,7 +25,7 @@ export default function Navbar({ solid = false }) {
   const navItems = [
     { label: "Products", href: "/products" },
     { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
+    { label: "Contact", href: "#contact" },
     { label: "My Orders", href: "/orders" },
   ];
 
@@ -62,13 +65,14 @@ export default function Navbar({ solid = false }) {
                   }`}
               >
                 <Image
-                  src="/logo2.png"
+                  src={logoSrc}
                   alt="Dronagiri Farm Logo"
                   width={200}
                   height={150}
                   loading="eager"
-                  className={`h-auto transition-[width] duration-300 ${scrolled ? "w-[150px]" : "w-[200px]"
+                  className={`transition-[width] duration-300 ${scrolled ? "w-[150px]" : "w-[200px]"
                     }`}
+                  style={{ height: "auto" }}
                 />
               </span>
             </div>

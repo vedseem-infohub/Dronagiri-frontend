@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
 
-const slides = [
+const DEFAULT_SLIDES = [
   {
     image: "/Artboard 3.png",
     alt: "Dronagiri Farm - Lush Organic Farmland and Premium Products",
@@ -54,6 +55,32 @@ const slides = [
 ];
 
 export default function Hero() {
+  const { settings } = useSiteSettings();
+
+  const slides = (settings?.heroSlides && settings.heroSlides.length > 0)
+    ? settings.heroSlides.map((s) => ({
+        image: s.image,
+        alt: `${s.title1 || "Dronagiri"} ${s.title2 || "Farm"}`,
+        badge: s.badge || "100% Natural & Organic",
+        title1: s.title1 || "Dronagiri",
+        title2: s.title2 || "Farm",
+        tagline: s.tagline || "",
+        primaryCta: {
+          text: s.primaryCtaText || "🛒 Shop Products",
+          href: s.primaryCtaLink || "/products",
+        },
+        secondaryCta: {
+          text: s.secondaryCtaText || "Our Story ↓",
+          href: s.secondaryCtaLink || "/about",
+        },
+        stats: [
+          { value: "22+", label: "Products" },
+          { value: "100%", label: "Natural" },
+          { value: "Farm", label: "Fresh" },
+        ],
+      }))
+    : DEFAULT_SLIDES;
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(true);
   const [touchStart, setTouchStart] = useState(0);

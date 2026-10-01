@@ -93,6 +93,30 @@ html {
   50% { box-shadow: 0 0 0 12px rgba(107, 124, 59, 0); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .animate-fade-in-up {
   animation: fadeInUp 0.7s ease forwards;
 }
@@ -335,3 +359,35 @@ html {
     @apply font-sans;
   }
 }
+
+/* ==========================================================================
+   Apple Devices (iOS Safari, iPadOS, macOS Safari) Compatibility
+   ========================================================================== */
+
+/* Prevent iOS Safari from auto-zooming on form input focus */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Remove default iOS gray tap highlight box */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Momentum scrolling for iOS scrollable containers */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fallback for WebKit backdrop-filter in older iOS/Safari versions */
+@supports not (backdrop-filter: blur(1px)) {
+  .backdrop-blur-md {
+    -webkit-backdrop-filter: blur(12px);
+  }
+}

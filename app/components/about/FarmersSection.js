@@ -157,12 +157,12 @@ export default function FarmersSection() {
           <p className="text-gray-500 mb-4">
             … and <strong className="text-[#223614]">500+ more farmer heroes</strong> across Maharashtra
           </p>
-          <a
+          {/* <a
             href="/contact"
             className="inline-flex items-center gap-2 border-2 border-[#223614] text-[#223614] hover:bg-[#223614] hover:text-white px-8 py-3.5 rounded-full font-semibold transition-all duration-300 text-sm tracking-wide"
           >
             Become a Partner Farmer
-          </a>
+          </a> */}
         </motion.div>
       </div>
     </section>

@@ -5,14 +5,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Leaf, Play } from "lucide-react";
+import { useSiteSettings } from "@/context/SiteSettingsContext";
 
 export default function AboutHeroSection() {
+  const { settings } = useSiteSettings();
+  const heroData = settings?.aboutHero || {};
+
+  const displayImage = heroData.image || "/about-hero.jpg";
+  const displayBadge = heroData.badge || "Est. 2018 · Dronagiri Farm";
+  const displayHeading =
+    heroData.heading || "Bringing Pure Organic Goodness From Farm To Your Family";
+  const displayParagraph =
+    heroData.paragraph ||
+    "From the fertile fields of Dronagiri to your dining table — we nurture every seed with love, tradition, and unwavering commitment to purity.";
+
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/about-hero.jpg"
+          src={displayImage}
           alt="Organic farm landscape at golden hour"
           fill
           priority
@@ -39,7 +51,7 @@ export default function AboutHeroSection() {
           className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-[#F7F1E8] px-5 py-2.5 rounded-full text-sm font-medium tracking-widest uppercase mb-8"
         >
           <Leaf className="h-4 w-4 text-green-400" />
-          Est. 2018 · Dronagiri Farm
+          {displayBadge}
         </motion.div>
 
         {/* Main Heading */}
@@ -49,14 +61,9 @@ export default function AboutHeroSection() {
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="font-[family-name:var(--font-playfair)] text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-[#F7F1E8] leading-[1.1] mb-8"
         >
-          Bringing Pure{" "}
-          <span className="relative">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300">
-              Organic Goodness
-            </span>
-          </span>{" "}
-          <br className="hidden sm:block" />
-          From Farm To Your Family
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-yellow-200">
+            {displayHeading}
+          </span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -66,8 +73,7 @@ export default function AboutHeroSection() {
           transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
           className="text-[#D9CBB5] text-lg sm:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed mb-12 font-light"
         >
-          From the fertile fields of Dronagiri to your dining table — 
-          we nurture every seed with love, tradition, and unwavering commitment to purity.
+          {displayParagraph}
         </motion.p>
 
         {/* CTA Buttons */}

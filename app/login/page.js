@@ -136,7 +136,8 @@ function LoginForm() {
               alt="Dronagiri Farm"
               width={180}
               height={60}
-              className="brightness-0 invert h-auto w-[160px]"
+              className="brightness-0 invert w-[160px]"
+              style={{ height: "auto" }}
               priority
             />
           </Link>
@@ -196,7 +197,8 @@ function LoginForm() {
             alt="Dronagiri Farm"
             width={160}
             height={54}
-            className="h-auto w-[140px]"
+            className="w-[140px]"
+            style={{ height: "auto" }}
             priority
           />
         </Link>

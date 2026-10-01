@@ -4,12 +4,23 @@ import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Star, Minus, Plus, ShoppingCart, ArrowLeft, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
-import { categoryColors } from "../data/products";
-import { useCart } from "@/context/CartContext";
-import { userDataContext } from "@/context/UserContext";
 import { toast } from "sonner";
 import ProductCard from "./ProductCard";
+import { useCart } from "@/context/CartContext";
+import { userDataContext } from "@/context/UserContext";
+import { motion } from "framer-motion";
+import { getOptimizedImageUrl } from "@/lib/imageUtils";
+
+const categoryColors = {
+  Spices: "bg-amber-100 text-amber-800",
+  Millets: "bg-lime-100 text-lime-800",
+  Pulses: "bg-orange-100 text-orange-800",
+  Rice: "bg-sky-100 text-sky-800",
+  "Wheat & Grains": "bg-yellow-100 text-yellow-800",
+  "Oils & Ghee": "bg-amber-100 text-amber-800",
+  Sweeteners: "bg-rose-100 text-rose-800",
+  "Nuts & Seeds": "bg-emerald-100 text-emerald-800",
+};
 
 export default function ProductDetailClient({ product, allProducts }) {
   const router = useRouter();
@@ -27,7 +38,8 @@ export default function ProductDetailClient({ product, allProducts }) {
     setQuantity(1);
   }, [product]);
 
-  const variant = product.variants[selectedVariant] || product.variants[0];
+  const variants = product?.variants || [];
+  const variant = variants[selectedVariant] || variants[0] || {};
   const catColor = categoryColors[product.category] || "bg-gray-100 text-gray-700";
 
   const handleIncrement = () => setQuantity((q) => q + 1);
@@ -61,6 +73,11 @@ export default function ProductDetailClient({ product, allProducts }) {
       return;
     }
 
+    if (!variant || !variant.quantity) {
+      toast.error("Please select a valid variant.");
+      return;
+    }
+
     try {
       await addToCart(product, variant.quantity, quantity);
       toast.success("Added to Cart!", {
@@ -89,6 +106,11 @@ export default function ProductDetailClient({ product, allProducts }) {
         },
       });
       router.push(`/login?redirect=/product/${product.id}`);
+      return;
+    }
+
+    if (!variant || !variant.quantity) {
+      toast.error("Please select a valid variant.");
       return;
     }
 
@@ -128,7 +150,7 @@ export default function ProductDetailClient({ product, allProducts }) {
 
       {/* Main product layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 bg-white rounded-3xl p-6 md:p-10 shadow-lg border border-[#8C6A43]/10 mb-16">
-        
+
         {/* Left Column: Image Gallery */}
         <div className="lg:col-span-5 flex flex-col gap-4">
           <div className="relative bg-gradient-to-br from-[#F7F1E8] via-[#fdfbf7] to-amber-50/50 flex items-center justify-center overflow-hidden rounded-2xl border border-[#8C6A43]/15 h-[300px] md:h-[450px]">
@@ -138,15 +160,16 @@ export default function ProductDetailClient({ product, allProducts }) {
                 {product.badge}
               </span>
             )}
-            
+
             {activeImage ? (
               <motion.img
                 key={activeImage}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
-                src={activeImage}
+                src={getOptimizedImageUrl(activeImage, { width: 1000 })}
                 alt={product.name}
+                decoding="async"
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
               />
             ) : (
@@ -161,23 +184,33 @@ export default function ProductDetailClient({ product, allProducts }) {
             <div className="flex gap-3 mt-2 justify-center lg:justify-start">
               <button
                 onClick={() => setActiveImage(product.imageUrl)}
-                className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                  activeImage === product.imageUrl
+                className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${activeImage === product.imageUrl
                     ? "border-[#8C6A43] shadow-md scale-102"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
-                <img src={product.imageUrl} alt="Thumbnail 1" className="w-full h-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(product.imageUrl, { width: 160 })}
+                  alt="Thumbnail 1"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
               </button>
               <button
                 onClick={() => setActiveImage(product.imageUrl2)}
-                className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                  activeImage === product.imageUrl2
+                className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${activeImage === product.imageUrl2
                     ? "border-[#8C6A43] shadow-md scale-102"
                     : "border-gray-200 hover:border-gray-300"
-                }`}
+                  }`}
               >
-                <img src={product.imageUrl2} alt="Thumbnail 2" className="w-full h-full object-cover" />
+                <img
+                  src={getOptimizedImageUrl(product.imageUrl2, { width: 160 })}
+                  alt="Thumbnail 2"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
               </button>
             </div>
           )}
@@ -189,7 +222,7 @@ export default function ProductDetailClient({ product, allProducts }) {
             <span className={`inline-block text-xs font-semibold px-3.5 py-1.5 rounded-full mb-3 shadow-sm ${catColor}`}>
               {product.category}
             </span>
-            
+
             <h1 className="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
               {product.name}
             </h1>
@@ -226,18 +259,17 @@ export default function ProductDetailClient({ product, allProducts }) {
               Select Package Size
             </h3>
             <div className="flex flex-wrap gap-3">
-              {product.variants.map((v, i) => (
+              {variants.map((v, i) => (
                 <button
                   key={i}
                   onClick={() => {
                     setSelectedVariant(i);
                     setQuantity(1); // reset quantity on variant change
                   }}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-200 cursor-pointer ${
-                    selectedVariant === i
+                  className={`px-5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-200 cursor-pointer ${selectedVariant === i
                       ? "border-[#8C6A43] bg-[#8C6A43]/10 text-[#8C6A43] shadow-md scale-102"
                       : "border-gray-200 text-gray-500 hover:border-[#8C6A43]/40 hover:text-[#8C6A43] bg-white"
-                  }`}
+                    }`}
                 >
                   {v.quantity}
                 </button>
@@ -249,9 +281,11 @@ export default function ProductDetailClient({ product, allProducts }) {
           <div className="flex flex-wrap items-center gap-6 pt-2">
             <div>
               <span className="text-4xl font-extrabold text-[#223614]">
-                ₹{variant.price}
+                ₹{variant?.price ?? 0}
               </span>
-              <span className="text-gray-400 text-sm ml-1.5">/ {variant.quantity}</span>
+              {variant?.quantity && (
+                <span className="text-gray-400 text-sm ml-1.5">/ {variant.quantity}</span>
+              )}
             </div>
 
             {/* Quantity Selector */}

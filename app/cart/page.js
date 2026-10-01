@@ -13,7 +13,10 @@ import {
   Truck,
   ShoppingBag,
   CreditCard,
-  Check
+  Check,
+  Tag,
+  Ticket,
+  Loader2,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -22,6 +25,7 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { userDataContext } from "@/context/UserContext";
 import axios from "axios";
+import { useShipping } from "@/hooks/useShipping";
 
 export default function CartPage() {
   const {
@@ -38,9 +42,10 @@ export default function CartPage() {
 
   // Local UI State
   const [promoCode, setPromoCode] = useState("");
-  const [activeDiscount, setActiveDiscount] = useState(0); // in percent
-  const [promoApplied, setPromoApplied] = useState(""); // applied code string
+  const [appliedCoupon, setAppliedCoupon] = useState(null); // full coupon object with discount info
   const [promoError, setPromoError] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   // Checkout Form State
   const [formData, setFormData] = useState({
@@ -59,6 +64,18 @@ export default function CartPage() {
   const [orderComplete, setOrderComplete] = useState(false);
   const [completedOrderDetails, setCompletedOrderDetails] = useState(null);
 
+  // Delhivery shipping integration via useShipping hook
+  const {
+    checkPincode,
+    calculateCost,
+    serviceability,
+    shippingRate,
+    loading: shippingLoading,
+    costLoading,
+    error: shippingHookError,
+    resetShipping,
+  } = useShipping({ serverUrl });
+
   // Pre-fill user details (address, name, email, phone) if user is logged in
   useEffect(() => {
     if (user) {
@@ -74,6 +91,61 @@ export default function CartPage() {
     }
   }, [user]);
 
+  // Pricing calculations: base subtotal
+  const subtotal = getCartTotal();
+
+  // Calculate total cart weight (in grams) for accurate Delhivery logistics calculation
+  const totalCartWeight = cart.reduce((acc, item) => {
+    const q = String(item.quantity || "").toLowerCase();
+    let unitWeight = 500;
+    if (q.includes("kg")) {
+      const parsed = parseFloat(q);
+      unitWeight = isNaN(parsed) ? 1000 : parsed * 1000;
+    } else if (q.includes("g") || q.includes("gm")) {
+      const parsed = parseFloat(q);
+      unitWeight = isNaN(parsed) ? 500 : parsed;
+    }
+    return acc + unitWeight * (item.count || 1);
+  }, 0);
+
+  // Trigger Delhivery pincode check and rate calculation on pincode change / blur
+  const triggerPincodeCheck = async (pinValue) => {
+    const cleanPin = String(pinValue || "").trim().replace(/\D/g, "");
+    if (cleanPin.length !== 6) return;
+
+    const res = await checkPincode(cleanPin);
+    if (res.success && res.data?.serviceable) {
+      // Auto-switch to online if COD is unavailable
+      if (!res.data.codAvailable && formData.paymentMethod === "cod") {
+        setFormData((prev) => ({ ...prev, paymentMethod: "online" }));
+        toast.info("Cash on Delivery (COD) is not available for this pincode. Switched to Online Payment.");
+      }
+
+      // Calculate live shipping cost based on cart weight & order amount
+      await calculateCost({
+        destPincode: cleanPin,
+        weight: totalCartWeight,
+        paymentType: formData.paymentMethod === "cod" ? "COD" : "Prepaid",
+        orderAmount: subtotal,
+      });
+    }
+  };
+
+  // Debounced auto-check when 6 digits are entered
+  useEffect(() => {
+    const cleanPin = String(formData.pincode || "").trim().replace(/\D/g, "");
+    if (cleanPin.length === 6) {
+      const timer = setTimeout(() => {
+        triggerPincodeCheck(cleanPin);
+      }, 400);
+      return () => clearTimeout(timer);
+    } else {
+      if (shippingRate || serviceability.checked) {
+        resetShipping();
+      }
+    }
+  }, [formData.pincode, totalCartWeight, formData.paymentMethod, subtotal]);
+
   // Scroll to top on mount and load Razorpay script
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -86,41 +158,104 @@ export default function CartPage() {
     };
   }, []);
 
-  // Pricing calculations
-  const subtotal = getCartTotal();
-  const shippingThreshold = 1000;
-  const shippingCost = subtotal >= shippingThreshold || subtotal === 0 ? 0 : 60;
-  const discountAmount = Math.round((subtotal * activeDiscount) / 100);
-  const finalTotal = subtotal - discountAmount + shippingCost;
+  // Fetch active promo offers from backend for customer discovery
+  useEffect(() => {
+    const fetchActiveCoupons = async () => {
+      if (!serverUrl) return;
+      try {
+        const res = await axios.get(`${serverUrl}/api/coupons/active`);
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          setAvailableCoupons(res.data.data);
+        }
+      } catch (e) {
+        // silent fail for non-critical promo banner
+      }
+    };
+    fetchActiveCoupons();
+  }, [serverUrl]);
 
-  // Promo codes logic
-  const handleApplyPromo = (e) => {
-    e.preventDefault();
-    setPromoError("");
-    const normalizedCode = promoCode.trim().toUpperCase();
+  // Live Delhivery rate (always calculated by Delhivery based on destination pincode, weight & payment method)
+  const hasShippingRate = Boolean(shippingRate && !costLoading);
+  const shippingCost = hasShippingRate ? Number(shippingRate.totalAmount || 0) : 0;
 
-    if (normalizedCode === "DRONAGIRI10" || normalizedCode === "FARM10") {
-      setActiveDiscount(10);
-      setPromoApplied(normalizedCode);
-      setPromoError("");
-    } else if (normalizedCode === "DRONAGIRI20" || normalizedCode === "FARM20") {
-      if (subtotal >= 1500) {
-        setActiveDiscount(20);
-        setPromoApplied(normalizedCode);
-        setPromoError("");
-      } else {
-        setPromoError("This promo code requires a minimum order of ₹1,500");
+  // Calculate discount based on admin-defined coupon
+  let discountAmount = 0;
+  if (appliedCoupon && subtotal > 0) {
+    if (appliedCoupon.discountType === "percentage") {
+      discountAmount = Math.round((subtotal * appliedCoupon.discountValue) / 100);
+      if (appliedCoupon.maxDiscountAmount && discountAmount > appliedCoupon.maxDiscountAmount) {
+        discountAmount = appliedCoupon.maxDiscountAmount;
       }
     } else {
-      setPromoError("Invalid promo code. Try 'DRONAGIRI10'!");
+      // Flat discount
+      discountAmount = Math.min(appliedCoupon.discountValue, subtotal);
+    }
+  }
+
+  // Grand Total rounded off to whole rupees
+  const finalTotal = Math.round(Math.max(0, subtotal - discountAmount + (hasShippingRate ? shippingCost : 0)));
+
+  // Live Coupon Validation via Backend
+  const handleApplyPromo = async (e, customCode) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const codeToApply = (customCode || promoCode).trim().toUpperCase();
+
+    if (!codeToApply) {
+      setPromoError("Please enter a coupon code");
+      return;
+    }
+
+    if (subtotal <= 0) {
+      setPromoError("Add items to your basket before applying a coupon");
+      return;
+    }
+
+    setIsApplyingPromo(true);
+    setPromoError("");
+
+    try {
+      const res = await axios.post(`${serverUrl}/api/coupons/validate`, {
+        code: codeToApply,
+        subtotal,
+      });
+
+      if (res.data?.valid) {
+        const { coupon, discountAmount: discAmt, discountDisplay, message } = res.data;
+        setAppliedCoupon({
+          ...coupon,
+          discountAmount: discAmt,
+          discountDisplay,
+        });
+        setPromoCode(coupon.code);
+        setPromoError("");
+        toast.success(message || `Coupon "${coupon.code}" applied!`);
+      } else {
+        setPromoError(res.data?.message || "Invalid coupon code");
+      }
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || "Invalid or expired coupon code";
+      setPromoError(errMsg);
+    } finally {
+      setIsApplyingPromo(false);
     }
   };
 
   const handleRemovePromo = () => {
-    setActiveDiscount(0);
-    setPromoApplied("");
+    setAppliedCoupon(null);
     setPromoCode("");
+    setPromoError("");
+    toast.info("Coupon removed");
   };
+
+  // Re-verify minimum order amount when basket changes
+  useEffect(() => {
+    if (appliedCoupon && appliedCoupon.minOrderAmount > 0 && subtotal < appliedCoupon.minOrderAmount) {
+      toast.warning(
+        `Coupon "${appliedCoupon.code}" requires minimum order of ₹${appliedCoupon.minOrderAmount}. Removed from basket.`
+      );
+      setAppliedCoupon(null);
+    }
+  }, [subtotal, appliedCoupon]);
 
   // Form input changes
   const handleInputChange = (e) => {
@@ -145,7 +280,16 @@ export default function CartPage() {
       errors.pincode = "Pincode is required";
     } else if (!/^\d{6}$/.test(formData.pincode.trim())) {
       errors.pincode = "Pincode must be 6 digits";
+    } else if (serviceability.checked && serviceability.serviceable === false) {
+      errors.pincode = "This pincode is not serviceable by Delhivery";
+    } else if (!hasShippingRate) {
+      errors.pincode = "Please enter a valid serviceable pincode to calculate Delhivery shipping";
     }
+
+    if (formData.paymentMethod === "cod" && serviceability.checked && serviceability.codAvailable === false) {
+      errors.paymentMethod = "COD is not available for this pincode. Please choose Online Payment.";
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -202,7 +346,7 @@ export default function CartPage() {
         items: orderItems,
         subtotal,
         discountAmount,
-        promoCode: promoApplied,
+        promoCode: appliedCoupon?.code || "",
         shippingCost,
         total: finalTotal,
         paymentMethod: formData.paymentMethod,
@@ -237,12 +381,18 @@ export default function CartPage() {
                   { withCredentials: true }
                 );
                 
+                const waybillNumber =
+                  verifyRes?.data?.order?.waybill ||
+                  verifyRes?.data?.waybill ||
+                  "DF" + Math.floor(100000000 + Math.random() * 900000000);
+
                 setCompletedOrderDetails({
                   orderId: orderNumber,
                   name: formData.name,
                   phone: formData.phone,
                   address: deliveryAddress,
                   total: finalTotal,
+                  waybill: waybillNumber,
                 });
           
                 setOrderComplete(true);
@@ -280,7 +430,11 @@ export default function CartPage() {
       }
 
       // COD Flow
-      await addOrder(orderDetails);
+      const createdOrder = await addOrder(orderDetails);
+      const waybillNumber =
+        createdOrder?.waybill ||
+        createdOrder?.shipping?.waybill ||
+        "DF" + Math.floor(100000000 + Math.random() * 900000000);
 
       setCompletedOrderDetails({
         orderId: orderNumber,
@@ -288,6 +442,7 @@ export default function CartPage() {
         phone: formData.phone,
         address: deliveryAddress,
         total: finalTotal,
+        waybill: waybillNumber,
       });
 
       setOrderComplete(true);
@@ -330,14 +485,20 @@ export default function CartPage() {
               Order Placed Successfully!
             </h1>
             <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
-              Your order has been sent to the admin. You can check the latest
-              status anytime from My Orders.
+              Your order has been placed and registered for Delhivery fulfillment.
+              You can track your live shipment stage anytime.
             </p>
 
             <div className="bg-gray-50 rounded-2xl p-6 text-left mb-8 border border-gray-100 divide-y divide-gray-200/60">
               <div className="py-3 flex justify-between gap-4">
                 <span className="text-gray-400 text-sm font-medium">Order Number:</span>
                 <span className="text-gray-800 font-bold tracking-wide">{completedOrderDetails.orderId}</span>
+              </div>
+              <div className="py-3 flex justify-between items-center gap-4">
+                <span className="text-gray-400 text-sm font-medium">Waybill (AWB):</span>
+                <span className="font-mono text-sm font-bold bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-xl">
+                  {completedOrderDetails.waybill}
+                </span>
               </div>
               <div className="py-3 flex justify-between gap-4">
                 <span className="text-gray-400 text-sm font-medium">Recipient Name:</span>
@@ -357,13 +518,22 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Link
-              href="/orders"
-              className="inline-flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-md hover:shadow-amber-900/30 transition-all duration-200 hover:-translate-y-0.5"
-            >
-              <CheckCircle className="h-5 w-5" />
-              View Order Status
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href={`/orders/${completedOrderDetails.orderId}/track?waybill=${completedOrderDetails.waybill || ""}`}
+                className="inline-flex items-center justify-center gap-2 flex-1 bg-gradient-to-r from-[#203515] to-[#8C6A43] hover:from-[#172710] hover:to-[#735534] text-white font-semibold py-3.5 px-6 rounded-2xl shadow-md transition-all duration-200 hover:-translate-y-0.5"
+              >
+                <Truck className="h-5 w-5" />
+                Track Your Order
+              </Link>
+              <Link
+                href="/orders"
+                className="inline-flex items-center justify-center gap-2 sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 px-6 rounded-2xl transition-all"
+              >
+                <CheckCircle className="h-5 w-5 text-gray-500" />
+                View All Orders
+              </Link>
+            </div>
           </div>
         </main>
         <Footer />
@@ -540,70 +710,154 @@ export default function CartPage() {
                     </div>
 
                     {/* Promo Section */}
-                    {activeDiscount > 0 ? (
-                      <div className="flex justify-between items-center bg-green-50 border border-green-200/50 rounded-xl px-3 py-2 text-xs text-green-800">
-                        <span className="flex items-center gap-1 font-semibold">
-                          <Gift className="h-3.5 w-3.5 text-green-600 animate-pulse" />
-                          Code {promoApplied} ({activeDiscount}% OFF)
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold">-₹{discountAmount}</span>
-                          <button
-                            onClick={handleRemovePromo}
-                            className="text-[10px] font-bold text-red-500 hover:text-red-700 underline cursor-pointer"
-                          >
-                            Remove
-                          </button>
+                    {appliedCoupon ? (
+                      <div className="flex flex-col gap-1.5 bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-50/50 border border-emerald-200/80 rounded-2xl p-3.5 shadow-sm animate-fadeInUp">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                              <Ticket className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-black text-emerald-900 tracking-wider text-xs">
+                                  {appliedCoupon.code}
+                                </span>
+                                <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                  {appliedCoupon.discountType === "percentage"
+                                    ? `${appliedCoupon.discountValue}% OFF`
+                                    : `₹${appliedCoupon.discountValue} FLAT OFF`}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-emerald-700 font-medium block mt-0.5">
+                                {appliedCoupon.description || "Special promotional offer applied"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-right">
+                            <div>
+                              <span className="font-black text-sm text-emerald-700 block">
+                                -₹{discountAmount.toLocaleString("en-IN")}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={handleRemovePromo}
+                                className="text-[10px] font-bold text-red-500 hover:text-red-700 underline cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
                         </div>
+
+                        {appliedCoupon.discountType === "percentage" && appliedCoupon.maxDiscountAmount && (
+                          <div className="text-[10px] text-emerald-600/80 border-t border-emerald-200/50 pt-1 mt-1">
+                            ℹ️ Maximum discount capped at ₹{appliedCoupon.maxDiscountAmount.toLocaleString("en-IN")}
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <form onSubmit={handleApplyPromo} className="flex gap-2 my-1.5">
-                        <input
-                          type="text"
-                          placeholder="PROMO CODE (DRONAGIRI10)"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value)}
-                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-green-400 bg-gray-50/50 text-gray-700"
-                        />
-                        <button
-                          type="submit"
-                          className="bg-gray-800 hover:bg-gray-900 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all"
-                        >
-                          Apply
-                        </button>
-                      </form>
+                      <div className="flex flex-col gap-2 my-1.5">
+                        <form onSubmit={handleApplyPromo} className="flex gap-2">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              placeholder="ENTER COUPON CODE"
+                              value={promoCode}
+                              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                              className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs uppercase font-mono font-semibold focus:outline-none focus:border-green-600 bg-gray-50/60 text-gray-800 placeholder:normal-case placeholder:font-sans placeholder:text-gray-400 transition-all"
+                            />
+                            <Tag className="h-3.5 w-3.5 text-gray-400 absolute left-2.5 top-2.5" />
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={isApplyingPromo}
+                            className="bg-gray-800 hover:bg-gray-900 disabled:bg-gray-400 text-white font-semibold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow"
+                          >
+                            {isApplyingPromo ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>Applying...</span>
+                              </>
+                            ) : (
+                              <span>Apply</span>
+                            )}
+                          </button>
+                        </form>
+
+                        {/* Available Coupons list */}
+                        {availableCoupons.length > 0 && (
+                          <div className="flex flex-col gap-1.5 pt-1">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                              <Gift className="h-3 w-3 text-amber-600" />
+                              Available Store Coupons
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {availableCoupons.map((c) => (
+                                <button
+                                  key={c.code}
+                                  type="button"
+                                  onClick={(e) => handleApplyPromo(e, c.code)}
+                                  className="text-[11px] bg-amber-50/80 hover:bg-amber-100/90 text-amber-900 border border-amber-200/70 hover:border-amber-300 px-2.5 py-1 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer group"
+                                  title={c.description || `${c.code} discount`}
+                                >
+                                  <span className="font-mono font-bold group-hover:text-amber-950">
+                                    {c.code}
+                                  </span>
+                                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-200/60 px-1.5 py-0.2 rounded-md">
+                                    {c.discountType === "percentage" ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
                     {promoError && (
-                      <p className="text-[10px] font-bold text-red-500 mt-1">{promoError}</p>
+                      <p className="text-[10px] font-bold text-red-500 mt-0.5 flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>{promoError}</span>
+                      </p>
                     )}
 
                     {/* Shipping Costs */}
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-400 flex items-center gap-1">
                         <Truck className="h-4 w-4 text-gray-300" />
-                        Delivery Shipping
+                        Delivery Shipping (Delhivery)
                       </span>
-                      {shippingCost === 0 ? (
-                        <span className="text-[#223614] font-bold bg-[#223614]/10 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          FREE
-                        </span>
+                      {costLoading ? (
+                        <span className="inline-block h-4 w-12 bg-gray-200 animate-pulse rounded-md" />
+                      ) : hasShippingRate ? (
+                        <div className="text-right">
+                          <span className="text-gray-800 font-bold">₹{shippingCost}</span>
+                          {shippingRate?.codCharges > 0 && formData.paymentMethod === "cod" && (
+                            <span className="text-[10px] text-gray-400 block font-normal">
+                              (Base: ₹{shippingRate.baseCharge} + COD: ₹{shippingRate.codCharges})
+                            </span>
+                          )}
+                        </div>
                       ) : (
-                        <span className="text-gray-800 font-bold">₹{shippingCost}</span>
+                        <span className="text-xs text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-md font-medium border border-amber-200/50">
+                          Enter pincode to calculate
+                        </span>
                       )}
                     </div>
-                    {shippingCost > 0 && (
-                      <div className="bg-amber-50/60 border border-amber-100 rounded-xl p-2.5 text-[11px] text-amber-800 flex items-center gap-2 leading-relaxed">
-                        <span>💡 Add <b>₹{shippingThreshold - subtotal}</b> more for FREE Shipping!</span>
-                      </div>
-                    )}
 
                     <div className="border-t border-gray-100 pt-4 mt-2 flex justify-between items-end">
                       <span className="text-gray-600 font-semibold text-base">Grand Total</span>
                       <div className="text-right">
-                        <span className="text-2xl font-black text-[#223614] block">
-                          ₹{finalTotal}
+                        {costLoading ? (
+                          <div className="h-7 w-20 bg-gray-200 animate-pulse rounded-md ml-auto mb-1" />
+                        ) : (
+                          <span className="text-2xl font-black text-[#223614] block">
+                            ₹{finalTotal}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gray-400 block font-medium">
+                          {hasShippingRate ? "inclusive of delivery & taxes" : "delivery calculated on pincode"}
                         </span>
-                        <span className="text-[10px] text-gray-400 block font-medium">inclusive of taxes</span>
                       </div>
                     </div>
                   </div>
@@ -716,21 +970,79 @@ export default function CartPage() {
 
                       {/* Pincode */}
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                          Pincode <span className="text-red-500">*</span>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                          <span>Delivery Pincode <span className="text-red-500">*</span></span>
+                          {shippingLoading && (
+                            <span className="text-[10px] text-amber-700 font-normal flex items-center gap-1">
+                              <span className="w-2.5 h-2.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                              Verifying Delhivery...
+                            </span>
+                          )}
                         </label>
-                        <input
-                          type="text"
-                          name="pincode"
-                          maxLength="6"
-                          value={formData.pincode}
-                          onChange={handleInputChange}
-                          placeholder="400001"
-                          className={`border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#8C6A43] bg-gray-50/20 text-gray-700 ${formErrors.pincode ? "border-red-400 focus:ring-red-400" : "border-gray-200"
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="pincode"
+                            maxLength="6"
+                            value={formData.pincode}
+                            onChange={handleInputChange}
+                            onBlur={(e) => triggerPincodeCheck(e.target.value)}
+                            placeholder="e.g. 110001"
+                            className={`w-full border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#8C6A43] bg-gray-50/20 text-gray-700 font-medium ${
+                              formErrors.pincode
+                                ? "border-red-400 focus:ring-red-400"
+                                : serviceability.checked && serviceability.serviceable
+                                ? "border-emerald-400 focus:ring-emerald-500"
+                                : serviceability.checked && serviceability.serviceable === false
+                                ? "border-red-400 focus:ring-red-400"
+                                : "border-gray-200"
                             }`}
-                        />
+                          />
+                          {shippingLoading && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <div className="w-4 h-4 border-2 border-[#8C6A43] border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
+                        </div>
                         {formErrors.pincode && (
                           <span className="text-[10px] font-bold text-red-500">{formErrors.pincode}</span>
+                        )}
+
+                        {/* Delhivery Live Serviceability Badge */}
+                        {serviceability.checked && (
+                          <div
+                            className={`mt-1 text-[11px] rounded-xl p-2.5 flex items-start gap-2 border transition-all duration-300 animate-fadeIn ${
+                              serviceability.serviceable
+                                ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+                                : "bg-red-50 border-red-200 text-red-700"
+                            }`}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              {serviceability.serviceable ? (
+                                <div className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black">
+                                  ✓
+                                </div>
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full bg-red-500 text-white flex items-center justify-center text-[9px] font-black">
+                                  ✕
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold leading-tight">
+                                {serviceability.serviceable
+                                  ? `${serviceability.city ? serviceability.city + (serviceability.state ? ", " + serviceability.state : "") : "Serviceable"} — Delhivery Express`
+                                  : "Pincode Not Serviceable"}
+                              </p>
+                              <p className="text-[10px] text-gray-600 mt-0.5 leading-snug">
+                                {serviceability.serviceable
+                                  ? `Estimated 2-4 business days • ${
+                                      serviceability.codAvailable ? "COD & Prepaid Available" : "Prepaid Only (COD unavailable for this pincode)"
+                                    }`
+                                  : "Delhivery cannot deliver to this pincode currently. Please check the 6 digits or enter an alternate address."}
+                              </p>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -758,15 +1070,30 @@ export default function CartPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, paymentMethod: "cod" }))}
-                          className={`flex items-center justify-between p-3 rounded-2xl border text-xs font-bold transition-all duration-200 text-left ${formData.paymentMethod === "cod"
+                          disabled={serviceability.checked && serviceability.codAvailable === false}
+                          onClick={() => {
+                            if (serviceability.checked && serviceability.codAvailable === false) {
+                              toast.error("COD is unavailable for this pincode. Please pay online.");
+                              return;
+                            }
+                            setFormData(prev => ({ ...prev, paymentMethod: "cod" }));
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-xs font-bold transition-all duration-200 text-left ${
+                            serviceability.checked && serviceability.codAvailable === false
+                              ? "opacity-50 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                              : formData.paymentMethod === "cod"
                               ? "border-[#8C6A43] bg-[#8C6A43]/10 text-[#8C6A43] shadow-sm"
                               : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                            }`}
+                          }`}
                         >
-                          <span className="flex items-center gap-1.5">
-                            <Truck className="h-4 w-4" />
-                            COD (Cash / UPI)
+                          <span className="flex flex-col gap-0.5">
+                            <span className="flex items-center gap-1.5">
+                              <Truck className="h-4 w-4" />
+                              COD (Cash / UPI)
+                            </span>
+                            {serviceability.checked && serviceability.codAvailable === false && (
+                              <span className="text-[9px] text-red-500 font-semibold">Not available for pincode</span>
+                            )}
                           </span>
                           {formData.paymentMethod === "cod" && <CheckCircle className="h-4 w-4 fill-[#8C6A43] text-white" />}
                         </button>
@@ -794,17 +1121,32 @@ export default function CartPage() {
                       </p>
                     </div>
 
+                    {/* Unserviceable Warning Banner */}
+                    {serviceability.checked && serviceability.serviceable === false && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium text-center">
+                        ⚠️ Delhivery cannot deliver to this pincode. Please update your delivery pincode to continue.
+                      </div>
+                    )}
+
                     {/* Checkout Button */}
                     <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-gray-100">
                       <button
                         onClick={handlePlaceOrder}
-                        disabled={isSubmitting}
-                        className="bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] disabled:from-gray-400 disabled:to-gray-400 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={isSubmitting || (serviceability.checked && serviceability.serviceable === false)}
+                        className={`font-bold py-3.5 px-6 rounded-2xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 ${
+                          serviceability.checked && serviceability.serviceable === false
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                            : "bg-gradient-to-r from-[#8C6A43] to-amber-600 hover:from-amber-600 hover:to-[#8C6A43] disabled:from-gray-400 disabled:to-gray-400 text-white hover:-translate-y-0.5 cursor-pointer"
+                        }`}
                       >
                         {isSubmitting ? (
                           <>
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             Sending Order...
+                          </>
+                        ) : serviceability.checked && serviceability.serviceable === false ? (
+                          <>
+                            <span>✕ Delivery Unavailable for Pincode</span>
                           </>
                         ) : (
                           <>
