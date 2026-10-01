@@ -2,7 +2,6 @@
 
 import axios from "axios";
 import { createContext, useContext, useEffect, useState, useRef } from "react";
-import { products as staticProducts } from "@/app/data/products";
 import { userDataContext } from "@/context/UserContext";
 
 const CartContext = createContext();
@@ -61,18 +60,28 @@ export function CartProvider({ children, initialCart, initialOrders }) {
   const { serverUrl, isLoggedIn, loding } = useContext(userDataContext);
   const didHydrateRef = useRef(initialCart !== undefined && initialOrders !== undefined);
 
-  const [dbProducts, setDbProducts] = useState(staticProducts);
+  const [dbProducts, setDbProducts] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const cached = sessionStorage.getItem("dronagiri_cached_products");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
 
   const [cart, setCart] = useState(() => {
     if (initialCart !== undefined) {
-      return normalizeCartItems(initialCart?.items || [], staticProducts);
+      return normalizeCartItems(initialCart?.items || [], []);
     }
     return [];
   });
 
   const [orders, setOrders] = useState(() => {
     if (initialOrders !== undefined) {
-      return normalizeOrders(initialOrders || [], staticProducts);
+      return normalizeOrders(initialOrders || [], []);
     }
     if (typeof window === "undefined") return [];
 
@@ -80,7 +89,7 @@ export function CartProvider({ children, initialCart, initialOrders }) {
     if (!savedOrders) return [];
 
     try {
-      return normalizeOrders(JSON.parse(savedOrders), staticProducts);
+      return normalizeOrders(JSON.parse(savedOrders), []);
     } catch (error) {
       console.error("Error parsing order data", error);
       return [];
@@ -94,8 +103,11 @@ export function CartProvider({ children, initialCart, initialOrders }) {
   const fetchDbProducts = async () => {
     try {
       const result = await axios.get(`${serverUrl}/api/products`);
-      if (result.data) {
+      if (result.data && Array.isArray(result.data)) {
         setDbProducts(result.data);
+        try {
+          sessionStorage.setItem("dronagiri_cached_products", JSON.stringify(result.data));
+        } catch (e) {}
         
         // Re-normalize cart with fresh products
         setCart((prevCart) => {
@@ -160,7 +172,16 @@ export function CartProvider({ children, initialCart, initialOrders }) {
 
   const fetchOrders = async () => {
     if (!isLoggedIn) {
-      setOrders([]);
+      try {
+        if (typeof window !== "undefined") {
+          const savedOrders = localStorage.getItem("dronagiri_orders");
+          if (savedOrders) {
+            setOrders(normalizeOrders(JSON.parse(savedOrders), dbProducts));
+          }
+        }
+      } catch (e) {
+        console.warn("Could not read local orders:", e);
+      }
       return;
     }
 
@@ -171,7 +192,15 @@ export function CartProvider({ children, initialCart, initialOrders }) {
       setOrders(normalizeOrders(result.data, dbProducts));
     } catch (error) {
       console.error("Error loading orders", error);
-      setOrders([]);
+      // Fallback to local storage if network fails
+      try {
+        if (typeof window !== "undefined") {
+          const savedOrders = localStorage.getItem("dronagiri_orders");
+          if (savedOrders) {
+            setOrders(normalizeOrders(JSON.parse(savedOrders), dbProducts));
+          }
+        }
+      } catch (e) {}
     }
   };
 
@@ -189,7 +218,14 @@ export function CartProvider({ children, initialCart, initialOrders }) {
       if (!isLoggedIn) {
         if (isMounted) {
           setCart([]);
-          setOrders([]);
+          try {
+            if (typeof window !== "undefined") {
+              const savedOrders = localStorage.getItem("dronagiri_orders");
+              if (savedOrders) {
+                setOrders(normalizeOrders(JSON.parse(savedOrders), dbProducts));
+              }
+            }
+          } catch (e) {}
           setIsLoaded(true);
         }
         return;
@@ -204,13 +240,20 @@ export function CartProvider({ children, initialCart, initialOrders }) {
         ]);
         if (isMounted) {
           applyBackendCart(cartRes.data);
-          setOrders(normalizeOrders(ordersRes.data));
+          setOrders(normalizeOrders(ordersRes.data, dbProducts));
         }
       } catch (error) {
         console.error("Error loading cart or orders", error);
         if (isMounted) {
           setCart([]);
-          setOrders([]);
+          try {
+            if (typeof window !== "undefined") {
+              const savedOrders = localStorage.getItem("dronagiri_orders");
+              if (savedOrders) {
+                setOrders(normalizeOrders(JSON.parse(savedOrders), dbProducts));
+              }
+            }
+          } catch (e) {}
         }
       } finally {
         if (isMounted) setIsLoaded(true);
@@ -294,8 +337,9 @@ export function CartProvider({ children, initialCart, initialOrders }) {
         ...orderData,
         createdAt: orderData.createdAt || new Date().toISOString(),
       };
-      setOrders((prevOrders) => [offlineOrder, ...prevOrders]);
-      return offlineOrder;
+      const [normalized] = normalizeOrders([offlineOrder], dbProducts);
+      setOrders((prevOrders) => [normalized || offlineOrder, ...prevOrders]);
+      return normalized || offlineOrder;
     }
 
     try {

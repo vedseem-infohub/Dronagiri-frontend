@@ -48,19 +48,25 @@ const categoryIconMap = {
   "Nuts & Seeds": Nut,
 };
 
+import { getOptimizedImageUrl } from "@/lib/imageUtils";
+
 export default function ProductIcon({ product, className = "" }) {
-  if (product.imageUrl) {
+  if (product?.imageUrl) {
     return (
       <img
-        src={product.imageUrl}
-        alt={product.name}
-        className="object-cover rounded-2xl w-24 h-24 shadow-sm"
+        src={getOptimizedImageUrl(product.imageUrl, { width: 120 })}
+        alt={product?.name || "Product"}
+        loading="lazy"
+        decoding="async"
+        className={className ? `${className} object-cover rounded-xl` : "w-full h-full object-cover rounded-xl"}
       />
     );
   }
 
   const Icon =
-    productIconMap[product.name] || categoryIconMap[product.category] || Leaf;
+    (product?.name && productIconMap[product.name]) ||
+    (product?.category && categoryIconMap[product.category]) ||
+    Leaf;
 
-  return <Icon className={className} aria-hidden="true" />;
+  return <Icon className={className || "h-5 w-5"} aria-hidden="true" />;
 }

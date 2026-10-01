@@ -5,12 +5,22 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Star, Minus, Plus } from "lucide-react";
 import { motion, useAnimation } from "framer-motion";
-import { categoryColors } from "../data/products";
 import ProductIcon from "./ProductIcon";
 import { useCart } from "@/context/CartContext";
-// import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { userDataContext } from "@/context/UserContext";
+import { getOptimizedImageUrl } from "@/lib/imageUtils";
+
+const categoryColors = {
+  Spices: "bg-amber-100 text-amber-800",
+  Millets: "bg-lime-100 text-lime-800",
+  Pulses: "bg-orange-100 text-orange-800",
+  Rice: "bg-sky-100 text-sky-800",
+  "Wheat & Grains": "bg-yellow-100 text-yellow-800",
+  "Oils & Ghee": "bg-amber-100 text-amber-800",
+  Sweeteners: "bg-rose-100 text-rose-800",
+  "Nuts & Seeds": "bg-emerald-100 text-emerald-800",
+};
 
 export default function ProductCard({ product }) {
   const [selectedVariant, setSelectedVariant] = useState(0);
@@ -52,20 +62,23 @@ export default function ProductCard({ product }) {
             {product.badge}
           </span>
         )}
-        
+
         {product.imageUrl ? (
           <div className="w-full h-full relative">
             <img
-              src={product.imageUrl}
+              src={getOptimizedImageUrl(product.imageUrl, { width: 600 })}
               alt={product.name}
-              className={`w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${
-                product.imageUrl2 ? "group-hover:opacity-0" : ""
-              }`}
+              loading="lazy"
+              decoding="async"
+              className={`w-full h-full object-cover transition-all duration-500 ease-in-out group-hover:scale-105 ${product.imageUrl2 ? "group-hover:opacity-0" : ""
+                }`}
             />
             {product.imageUrl2 && (
               <img
-                src={product.imageUrl2}
+                src={getOptimizedImageUrl(product.imageUrl2, { width: 600 })}
                 alt={`${product.name} Hover`}
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out scale-100 group-hover:scale-105"
               />
             )}
@@ -124,11 +137,10 @@ export default function ProductCard({ product }) {
                   setSelectedVariant(i);
                   setQuantity(1); // Reset quantity on variant change
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all duration-200 ${
-                  selectedVariant === i
-                    ? "border-[#8C6A43] bg-[#8C6A43]/10 text-[#8C6A43] shadow-sm"
-                    : "border-gray-200 text-gray-500 hover:border-[#8C6A43]/40 hover:text-[#8C6A43]"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border-2 transition-all duration-200 ${selectedVariant === i
+                  ? "border-[#8C6A43] bg-[#8C6A43]/10 text-[#8C6A43] shadow-sm"
+                  : "border-gray-200 text-gray-500 hover:border-[#8C6A43]/40 hover:text-[#8C6A43]"
+                  }`}
               >
                 {v.quantity}
               </button>

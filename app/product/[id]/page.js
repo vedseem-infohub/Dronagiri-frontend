@@ -1,51 +1,63 @@
+import { cache } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import ProductDetailClient from "../../components/ProductDetailClient";
 import { notFound } from "next/navigation";
 
+export const revalidate = 60;
+
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_BACKEND_URL ||
+  process.env.NEXT_API_BACKEND_URL ||
+  "https://dronagiri-backend-e4ja.onrender.com";
+
+const getProduct = cache(async (id) => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/products/${id}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+});
+
+const getAllProducts = cache(async () => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/products`, {
+      next: { revalidate: 60 },
+    });
+    if (res.ok) return await res.json();
+  } catch (error) {
+    console.error("Error fetching all products for recommendations:", error);
+  }
+  return [];
+});
+
 export async function generateMetadata({ params }) {
   const { id } = await params;
+  const product = await getProduct(id);
 
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
-    if (!res.ok) {
-      return {
-        title: "Product Not Found | Dronagiri Farm",
-      };
-    }
-    const product = await res.json();
+  if (!product) {
     return {
-      title: `${product.name} | Dronagiri Farm`,
-      description: product.description || `Buy ${product.name} farm-fresh organic from Dronagiri Farm.`,
-    };
-  } catch (error) {
-    return {
-      title: "Dronagiri Farm Products",
+      title: "Product Not Found | Dronagiri Farm",
     };
   }
+
+  return {
+    title: `${product.name} | Dronagiri Farm`,
+    description: product.description || `Buy ${product.name} farm-fresh organic from Dronagiri Farm.`,
+  };
 }
 
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
 
-  let product = null;
-  let allProducts = [];
-
-  try {
-    // Fetch individual product details
-    const productRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products/${id}`, { cache: "no-store" });
-    if (productRes.ok) {
-      product = await productRes.json();
-    }
-
-    // Fetch all products to recommend other items in the same category
-    const allRes = await fetch(`${process.env.NEXT_PUBLIC_API_BACKEND_URL || process.env.NEXT_API_BACKEND_URL || "http://localhost:8000"}/api/products`, { cache: "no-store" });
-    if (allRes.ok) {
-      allProducts = await allRes.json();
-    }
-  } catch (error) {
-    console.error("Error fetching product details or recommendations:", error);
-  }
+  const [product, allProducts] = await Promise.all([
+    getProduct(id),
+    getAllProducts(),
+  ]);
 
   if (!product) {
     notFound();
@@ -61,3 +73,4 @@ export default async function ProductDetailPage({ params }) {
     </>
   );
 }
+

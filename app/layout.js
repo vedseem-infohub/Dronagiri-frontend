@@ -3,6 +3,7 @@ import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import UserContext from "@/context/UserContext";
+import { SiteSettingsProvider } from "@/context/SiteSettingsContext";
 import { Toaster } from "@/components/ui/sonner";
 import { cookies } from "next/headers";
 import axios from "axios";
@@ -19,6 +20,12 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://dronagirifarms.co.in"),
@@ -77,15 +84,17 @@ export default async function RootLayout({ children }) {
       data-scroll-behavior="smooth"
       className={`${playfair.variable} ${poppins.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-poppins)] bg-[#fdfbf7]">
-        <UserContext initialUser={initialUser}>
-          <CartProvider initialCart={initialCart} initialOrders={initialOrders}>
-            <TooltipProvider>
-              {children}
-              <Toaster position="bottom-right" closeButton richColors />
-            </TooltipProvider>
-          </CartProvider>
-        </UserContext>
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-poppins)] bg-[#fdfbf7] pb-[env(safe-area-inset-bottom)]">
+        <SiteSettingsProvider>
+          <UserContext initialUser={initialUser}>
+            <CartProvider initialCart={initialCart} initialOrders={initialOrders}>
+              <TooltipProvider>
+                {children}
+                <Toaster position="bottom-right" closeButton richColors />
+              </TooltipProvider>
+            </CartProvider>
+          </UserContext>
+        </SiteSettingsProvider>
       </body>
     </html>
   );

@@ -24,7 +24,7 @@ function SignUp() {
   const searchParams = useSearchParams();
   const targetRedirect = searchParams.get("redirect") || "/";
   const redirectTo = `/address?redirect=${encodeURIComponent(targetRedirect)}`;
-  const { serverUrl, setuserData } = useContext(userDataContext);
+  const { serverUrl, setuserData, signup } = useContext(userDataContext);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,12 +45,16 @@ function SignUp() {
     setIsSubmitting(true);
 
     try {
-      const result = await axios.post(
-        `${serverUrl}/api/auth/signup`,
-        { name: name.trim(), email: email.trim(), password },
-        { withCredentials: true }
-      );
-      setuserData(result.data);
+      if (signup) {
+        await signup(name.trim(), email.trim(), password);
+      } else {
+        const result = await axios.post(
+          `${serverUrl}/api/auth/signup`,
+          { name: name.trim(), email: email.trim(), password },
+          { withCredentials: true }
+        );
+        setuserData(result.data);
+      }
       toast.success("Account created!", {
         description: "Welcome to Dronagiri Farm.",
       });
@@ -111,7 +115,8 @@ function SignUp() {
               alt="Dronagiri Farm"
               width={180}
               height={60}
-              className="brightness-0 invert h-auto w-[160px]"
+              className="brightness-0 invert w-[160px]"
+              style={{ height: "auto" }}
               priority
             />
           </Link>
@@ -167,7 +172,8 @@ function SignUp() {
             alt="Dronagiri Farm"
             width={160}
             height={54}
-            className="h-auto w-[140px]"
+            className="w-[140px]"
+            style={{ height: "auto" }}
             priority
           />
         </Link>
